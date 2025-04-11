@@ -14,6 +14,9 @@ The big idea: You want to catch any **unexpected performance drops** in the clus
 
 # Schedule
 
+`Aion` - Jahid  
+`Iris` - JIANG  
+
 week 1: 
 1. Install three ways; 
 2. **Intra-socket** —  Jahid  
