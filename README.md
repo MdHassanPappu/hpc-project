@@ -12,25 +12,14 @@ The big idea: You want to catch any **unexpected performance drops** in the clus
 
 ---
 
-# Schedule
+## TODO
+1. Fix the parameter, `--cpu-bind` assign everything on cores. find info from `slurm` document.
+2. Fix the cpu cluster on `Iris`.
+3. Run everything on `Aion`, if there are some bugs, try to fix. step 1 - 4.1
+4.  Run tests for the four cases.
 
-`Aion` - Jahid  
-`Iris` - JIANG  
-
-week 1: 
-1. Install three ways; 
-2. **Intra-socket** —  Jahid  
-	**Inter-socket** — Jiang
-3. simple report: graph
-4. create github
-5. write down everything
-6. optional: write scripts steps by steps.
-
-Next discussion: **21th April, Monday, 14:00**
-
-week 2: **Inter-node** 
-
-week 3: Advanced optimazation
+## schedule
+Every Thursday.
 
 ---
 
@@ -65,9 +54,10 @@ You'll test how MPI performs in different hardware configurations:
 
 ## 👇 Focus on 3 Communication Scenarios
 
-1. **Intra-socket** — same socket (same NUMA node)
-2. **Inter-socket** — different sockets on the same node
-3. **Inter-node** — across two physical compute nodes
+• both processes are running on the same NUMA node,
+• both processes are running on the same physical socket but different NUMA nodes,
+• both processes are running on the same compute node but different sockets, and
+• the 2 processes are running on different nodes.
 
 Use the `hwloc` tool to find where processes are running (NUMA topology).
 
