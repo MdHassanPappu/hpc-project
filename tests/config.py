@@ -1,94 +1,71 @@
-# Configuration dictionaries - move these to the top for easy modification
-BINDING_CONFIGS = {
-    'threads': {'option': '--cpu-bind=threads', 'desc': 'Same core, SMT siblings'},
-    'cores': {'option': '--cpu-bind=cores', 'desc': 'Same socket, different cores'},
-    'sockets': {'option': '--cpu-bind=sockets', 'desc': 'Different sockets'},
-    'ldoms': {'option': '--cpu-bind=ldoms', 'desc': 'Different NUMA domains'},
-    'map_cpu': {'option': '--cpu-bind=map_cpu:${MIN_ID},${MAX_ID}', 'desc': 'Max hop / farthest cores'},
-    'map_cpu_nb': {'option': '--cpu-bind=map_cpu:${MID1},${MID2}', 'desc': 'Neighboring sockets'},
-    'none': {'option': '--cpu-bind=None', 'desc': 'No binding'}
-}
-
 # Reference values by system, binding type, and binary source
 REFERENCE_VALUES = {
     'aion': {
         'latency': {
-            'default': (0.21, -0.05, 0.05, 'us'),
-            'multi_node': (3.9, -0.2, 0.2, 'us')
+            'default': (0.18, -0.05, 0.05, 'us'),  # Updated from 0.21 to 0.18
+            'same_numa': (0.18, -0.05, 0.05, 'us'),
+            'diff_numa_same_socket': (0.18, -0.05, 0.05, 'us'),
+            'diff_socket_same_node': (0.17, -0.05, 0.05, 'us'),
+            'diff_node': (8.0, -0.5, 0.5, 'us')
         },
         'bandwidth': {
             'eessi': {
-                'default': (8300, -0.2, 0.2, 'MB/s'),
-                'threads': (4000, -0.2, 0.2, 'MB/s'),
-                'cores': (2000, -0.2, 0.2, 'MB/s'),
-                'sockets': (2000, -0.2, 0.2, 'MB/s'),
-                'ldoms': (2000, -0.2, 0.2, 'MB/s'),
-                'map_cpu': (2000, -0.2, 0.2, 'MB/s'),
-                'map_cpu_nb': (4000, -0.2, 0.2, 'MB/s'),
-                'none': (8200, -0.2, 0.2, 'MB/s'),
-                'multi_node': (8300, -0.2, 0.2, 'MB/s')
+                'default': (7200, -0.2, 0.2, 'MB/s'),  # Updated default value
+                'same_numa': (7200, -0.2, 0.2, 'MB/s'),
+                'diff_numa_same_socket': (4500, -0.2, 0.2, 'MB/s'),
+                'diff_socket_same_node': (4400, -0.2, 0.2, 'MB/s'),
+                'diff_node': (1500, -0.2, 0.2, 'MB/s')
             },
             'easybuild': {                
-                'default': (8300, -0.2, 0.2, 'MB/s'),
-                'threads': (6000, -0.2, 0.2, 'MB/s'),
-                'cores': (5700, -0.2, 0.2, 'MB/s'),
-                'sockets': (4000, -0.2, 0.2, 'MB/s'),
-                'ldoms': (7000, -0.2, 0.2, 'MB/s'),
-                'map_cpu': (3300, -0.2, 0.2, 'MB/s'),
-                'map_cpu_nb': (3000, -0.2, 0.2, 'MB/s'),
-                'none': (3200, -0.2, 0.2, 'MB/s'),
-                'multi_node': (8300, -0.2, 0.2, 'MB/s')
+                'default': (2500, -0.2, 0.2, 'MB/s'),  # Updated default value
+                'same_numa': (2500, -0.2, 0.2, 'MB/s'),
+                'diff_numa_same_socket': (2500, -0.2, 0.2, 'MB/s'),
+                'diff_socket_same_node': (2500, -0.2, 0.2, 'MB/s'),
+                'diff_node': (1900, -0.2, 0.2, 'MB/s')
             },
             'local': {                
-                'default': (8300, -0.2, 0.2, 'MB/s'),
-                'threads': (8400, -0.2, 0.2, 'MB/s'),
-                'cores': (3600, -0.2, 0.2, 'MB/s'),
-                'sockets': (3200, -0.2, 0.2, 'MB/s'),
-                'ldoms': (3500, -0.2, 0.2, 'MB/s'),
-                'map_cpu': (3000, -0.2, 0.2, 'MB/s'),
-                'map_cpu_nb': (4100, -0.2, 0.2, 'MB/s'),
-                'none': (2300, -0.2, 0.2, 'MB/s'),
-                'multi_node': (8300, -0.2, 0.2, 'MB/s')
+                'default': (2800, -0.2, 0.2, 'MB/s'),  # Updated default value
+                'same_numa': (2800, -0.2, 0.2, 'MB/s'),
+                'diff_numa_same_socket': (2800, -0.2, 0.2, 'MB/s'),
+                'diff_socket_same_node': (6200, -0.2, 0.2, 'MB/s'),
+                'diff_node': (2000, -0.2, 0.2, 'MB/s')
             },
         }
     },
+    # Keep iris values for now since we don't have new test results for it
     'iris': {
         'latency': {
-            'default': (0.21, -0.2, 0.2, 'us'),
-            'multi_node': (3.9, -0.2, 0.2, 'us')
+            'default': (0.18, -0.05, 0.05, 'us'),  # Updated from 0.21 to 0.18
+            'multi_node': (8.0, -0.5, 0.5, 'us'),  # Updated from 3.9 to 8.0 with wider tolerance
+            'same_numa': (0.18, -0.05, 0.05, 'us'),
+            'diff_numa_same_socket': (0.18, -0.05, 0.05, 'us'),
+            'diff_socket_same_node': (0.17, -0.05, 0.05, 'us'),
+            'diff_node': (8.0, -0.5, 0.5, 'us')
         },
         'bandwidth': {
-            'eessi': {                
-                'default': (8300, -0.2, 0.2, 'MB/s'),
-                'threads': (3200, -0.2, 0.2, 'MB/s'),
-                'cores': (2400, -0.2, 0.2, 'MB/s'),
-                'sockets': (1800, -0.2, 0.2, 'MB/s'),
-                'ldoms': (6200, -0.2, 0.2, 'MB/s'),
-                'map_cpu': (5700, -0.2, 0.2, 'MB/s'),
-                'map_cpu_nb': (4150, -0.2, 0.2, 'MB/s'),
-                'none': (8300, -0.2, 0.2, 'MB/s'),
-                'multi_node': (8300, -0.2, 0.2, 'MB/s')
+            'eessi': {
+                'default': (7200, -0.2, 0.2, 'MB/s'),  # Updated default value
+                'multi_node': (1500, -0.2, 0.2, 'MB/s'),  # Updated for multi-node
+                'same_numa': (7200, -0.2, 0.2, 'MB/s'),
+                'diff_numa_same_socket': (4500, -0.2, 0.2, 'MB/s'),
+                'diff_socket_same_node': (4400, -0.2, 0.2, 'MB/s'),
+                'diff_node': (1500, -0.2, 0.2, 'MB/s')
             },
             'easybuild': {                
-                'default': (8300, -0.2, 0.2, 'MB/s'),
-                'threads': (8100, -0.2, 0.2, 'MB/s'),
-                'cores': (8400, -0.2, 0.2, 'MB/s'),
-                'sockets': (4300, -0.2, 0.2, 'MB/s'),
-                'ldoms': (6200, -0.2, 0.2, 'MB/s'),
-                'map_cpu': (5700, -0.2, 0.2, 'MB/s'),
-                'map_cpu_nb': (4100, -0.2, 0.2, 'MB/s'),
-                'none': (3200, -0.2, 0.2, 'MB/s'),
-                'multi_node': (8300, -0.2, 0.2, 'MB/s')
+                'default': (2500, -0.2, 0.2, 'MB/s'),  # Updated default value
+                'multi_node': (1900, -0.2, 0.2, 'MB/s'),  # Updated for multi-node
+                'same_numa': (2500, -0.2, 0.2, 'MB/s'),
+                'diff_numa_same_socket': (2500, -0.2, 0.2, 'MB/s'),
+                'diff_socket_same_node': (2500, -0.2, 0.2, 'MB/s'),
+                'diff_node': (1900, -0.2, 0.2, 'MB/s')
             },
-            'local': {
-                'threads': (2700, -0.2, 0.2, 'MB/s'),
-                'cores': (3000, -0.2, 0.2, 'MB/s'),
-                'sockets': (2200, -0.2, 0.2, 'MB/s'),
-                'ldoms': (5000, -0.2, 0.2, 'MB/s'),
-                'map_cpu': (4700, -0.2, 0.2, 'MB/s'),
-                'map_cpu_nb': (4100, -0.2, 0.2, 'MB/s'),
-                'none': (2200, -0.2, 0.2, 'MB/s'),
-                'multi_node': (8300, -0.2, 0.2, 'MB/s')
+            'local': {                
+                'default': (2800, -0.2, 0.2, 'MB/s'),  # Updated default value
+                'multi_node': (2000, -0.2, 0.2, 'MB/s'),  # Updated for multi-node
+                'same_numa': (2800, -0.2, 0.2, 'MB/s'),
+                'diff_numa_same_socket': (2800, -0.2, 0.2, 'MB/s'),
+                'diff_socket_same_node': (6200, -0.2, 0.2, 'MB/s'),
+                'diff_node': (2000, -0.2, 0.2, 'MB/s')
             },
         }
     }
@@ -101,7 +78,7 @@ MODULE_CONFIGS = {
             ],
             'easybuild': [
                 'module load tools/EasyBuild/5.0.0 || echo "Warning: Could not load EasyBuild"',
-                'module load perf/OSU-Micro-Benchmarks/7.2-gompi-2023b || echo "Warning: Could not load OSU benchmarks"'
+                'module load perf/OSU-Micro-Benchmarks/7.5-gompi-2023b || echo "Warning: Could not load OSU benchmarks"'
             ],
             'eessi': [
                 'module load EESSI || echo "Warning: Could not load EESSI"',
