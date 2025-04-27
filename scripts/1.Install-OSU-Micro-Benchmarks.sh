@@ -83,7 +83,7 @@ install_easybuild() {
     fi
 
     echo "module load perf/OSU-Micro-Benchmarks/${OSU_VERSION}-gompi-2023b" >> "$TEMP_ENV_FILE"
-    module load perf/OSU-Micro-Benchmarks/7.5-gompi-2023b
+    module load perf/OSU-Micro-Benchmarks/${OSU_VERSION}-gompi-2023b
     [[ "$VERIFY" == "true" || "$VERIFY" == "yes" ]] && verify_osu
 }
 
