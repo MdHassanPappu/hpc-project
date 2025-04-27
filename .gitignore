@@ -24,6 +24,7 @@ log/
 *output/
 *perflogs/
 *stage/
+*reports/
 share/python-wheels/
 *.egg-info/
 .installed.cfg

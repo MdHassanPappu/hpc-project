@@ -3,13 +3,16 @@
 # Default values
 INSTALL_METHOD="local"
 OSU_VERSION="7.2"
-TEMP_ENV_FILE="/tmp/osu_env_$$.sh"
+VERIFY="false"
+TEMP_ENV_FILE="/tmp/osu_env_${INSTALL_METHOD}.sh"
+rm "$TEMP_ENV_FILE" 2>/dev/null || true
 
 # Parse command line options
 while [[ "$#" -gt 0 ]]; do
     case $1 in
         -m|--method) INSTALL_METHOD="$2"; shift ;;
         -v|--osu-version|--version) OSU_VERSION="$2"; shift ;;
+        --verify) VERIFY="$2"; shift ;;
         *) echo "Unknown parameter: $1"; exit 1 ;;
     esac
     shift
@@ -46,7 +49,7 @@ install_local() {
     if [[ -d "$EBROOTOSUMINMICROMINBENCHMARKS/libexec/osu-micro-benchmarks/mpi/one-sided" ]]; then
         echo "✅ OSU Benchmarks already compiled locally at $BUILD_DIR"
         echo "export EBROOTOSUMINMICROMINBENCHMARKS=$EBROOTOSUMINMICROMINBENCHMARKS" >> "$TEMP_ENV_FILE"
-	verify_osu
+	    [[ "$VERIFY" == "true" || "$VERIFY" == "yes" ]] && verify_osu
         return
     fi
 
@@ -63,7 +66,8 @@ install_local() {
     make -j && make install
 
     echo "export EBROOTOSUMINMICROMINBENCHMARKS=$EBROOTOSUMINMICROMINBENCHMARKS" >> "$TEMP_ENV_FILE"
-    verify_osu
+    [[ "$VERIFY" == "true" || "$VERIFY" == "yes" ]] && verify_osu
+
 }
 
 install_easybuild() {
@@ -79,8 +83,8 @@ install_easybuild() {
     fi
 
     echo "module load perf/OSU-Micro-Benchmarks/${OSU_VERSION}-gompi-2023b" >> "$TEMP_ENV_FILE"
-    module load perf/OSU-Micro-Benchmarks/${OSU_VERSION}-gompi-2023b
-    verify_osu
+    module load perf/OSU-Micro-Benchmarks/7.5-gompi-2023b
+    [[ "$VERIFY" == "true" || "$VERIFY" == "yes" ]] && verify_osu
 }
 
 install_eessi() {
@@ -98,7 +102,7 @@ install_eessi() {
         echo "module load EESSI" >> "$TEMP_ENV_FILE"
         echo "module load OSU-Micro-Benchmarks/${OSU_VERSION}-gompi-2023b" >> "$TEMP_ENV_FILE"
         module load OSU-Micro-Benchmarks/${OSU_VERSION}-gompi-2023b
-        verify_osu
+        [[ "$VERIFY" == "true" || "$VERIFY" == "yes" ]] && verify_osu
     else
         echo "❌ OSU Benchmarks module not found in EESSI"
     fi

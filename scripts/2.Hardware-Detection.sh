@@ -1,127 +1,225 @@
 #!/bin/bash
-# filepath: /home/users/bjiang/hpc-project/scripts/verify_placement.sh
-
-# =====================================================
-# Combined hardware detection and placement verification 
-# =====================================================
 
 # Setup environment
 LOG_DIR="$HOME/hpc-project/log"
-mkdir -p "$LOG_DIR"
+SCRIPTS_DIR="$PWD"
+mkdir -p "$LOG_DIR" "$SCRIPTS_DIR"
 
-# Function to detect hardware topology
+# Function to detect hardware topology within Slurm allocation
 detect_hardware_topology() {
     echo "===== Hardware Topology Detection ====="
-    echo "Date: $(date)"
-    echo ""
     
     # Basic hardware detection
     NUMA_COUNT=$(lscpu | grep "^NUMA node(s):" | awk '{print $3}')
     SOCKET_COUNT=$(lscpu | grep "^Socket(s):" | awk '{print $2}')
-    CORE_COUNT=$(lscpu | grep "^Core(s) per socket:" | awk '{print $4}')
-    THREAD_COUNT=$(lscpu | grep "^Thread(s) per core:" | awk '{print $4}')
-
+    
     echo "Detected configuration:"
     echo "- $NUMA_COUNT NUMA node(s)"
     echo "- $SOCKET_COUNT socket(s)"
-    echo "- $CORE_COUNT core(s) per socket"
-    echo "- $THREAD_COUNT thread(s) per core"
     
-    # Calculate NUMA nodes per socket
-    NUMA_PER_SOCKET=$(( $NUMA_COUNT / $SOCKET_COUNT ))
-    echo "- $NUMA_PER_SOCKET NUMA node(s) per socket"
+    # Get CPUs allocated to this job by Slurm
+    if [ -n "$SLURM_JOB_ID" ]; then
+        echo "Running under Slurm job $SLURM_JOB_ID"
+        ALLOCATED_CPUS=$(grep Cpus_allowed_list /proc/self/status | awk '{print $2}')
+        echo "CPUs allocated to this job: $ALLOCATED_CPUS"
+    else
+        echo "Not running under Slurm - using all CPUs"
+        ALLOCATED_CPUS=$(seq -s, 0 $(($(nproc)-1)))
+    fi
     
-    # Map NUMA nodes to sockets
-    declare -A SOCKET_TO_NUMA
-    echo "NUMA to socket mapping:"
+    # Build socket->NUMA node map using allocated CPUs
+    declare -A SOCKET_NUMA_MAP
+    declare -A NUMA_CPUS_MAP
     
-    for n in $(seq 0 $((NUMA_COUNT-1))); do
-        if numactl -H | grep -q "node $n"; then
-            # Find a CPU in this NUMA node
-            CPU=$(numactl -H | grep -A1 "node $n cpus:" | tail -1 | awk '{print $1}')
-            if [ ! -z "$CPU" ]; then
-                SOCKET=$(lscpu -p=cpu,socket | grep "^$CPU," | cut -d, -f2)
-                echo "- NUMA node $n is on socket $SOCKET (detected via CPU $CPU)"
+    # Process each CPU and build the hierarchy
+    IFS=',' read -ra CPU_RANGES <<< "$ALLOCATED_CPUS"
+    for range in "${CPU_RANGES[@]}"; do
+        if [[ $range == *-* ]]; then
+            # Handle range like 0-127
+            start="${range%-*}"
+            end="${range#*-}"
+            for ((cpu=start; cpu<=end; cpu++)); do
+                # Get NUMA node and socket for this CPU
+                node=$(lscpu -p=cpu,node | grep "^$cpu," | cut -d, -f2)
+                socket=$(lscpu -p=cpu,socket | grep "^$cpu," | cut -d, -f2)
                 
-                # Build the mapping
-                if [ -z "${SOCKET_TO_NUMA[$SOCKET]}" ]; then
-                    SOCKET_TO_NUMA[$SOCKET]=$n
-                else
-                    SOCKET_TO_NUMA[$SOCKET]="${SOCKET_TO_NUMA[$SOCKET]} $n"
+                # Skip if we couldn't determine the node or socket
+                [ -z "$node" ] || [ -z "$socket" ] && continue
+                
+                # Build the maps
+                if [ -z "${SOCKET_NUMA_MAP[$socket]}" ]; then
+                    SOCKET_NUMA_MAP[$socket]="$node"
+                elif [[ ! " ${SOCKET_NUMA_MAP[$socket]} " =~ " $node " ]]; then
+                    SOCKET_NUMA_MAP[$socket]="${SOCKET_NUMA_MAP[$socket]} $node"
                 fi
+                
+                if [ -z "${NUMA_CPUS_MAP[$node]}" ]; then
+                    NUMA_CPUS_MAP[$node]="$cpu"
+                else
+                    NUMA_CPUS_MAP[$node]="${NUMA_CPUS_MAP[$node]} $cpu"
+                fi
+            done
+        else
+            # Handle single CPU
+            cpu=$range
+            node=$(lscpu -p=cpu,node | grep "^$cpu," | cut -d, -f2)
+            socket=$(lscpu -p=cpu,socket | grep "^$cpu," | cut -d, -f2)
+            
+            # Skip if we couldn't determine the node or socket
+            [ -z "$node" ] || [ -z "$socket" ] && continue
+            
+            # Build the maps
+            if [ -z "${SOCKET_NUMA_MAP[$socket]}" ]; then
+                SOCKET_NUMA_MAP[$socket]="$node"
+            elif [[ ! " ${SOCKET_NUMA_MAP[$socket]} " =~ " $node " ]]; then
+                SOCKET_NUMA_MAP[$socket]="${SOCKET_NUMA_MAP[$socket]} $node"
+            fi
+            
+            if [ -z "${NUMA_CPUS_MAP[$node]}" ]; then
+                NUMA_CPUS_MAP[$node]="$cpu"
+            else
+                NUMA_CPUS_MAP[$node]="${NUMA_CPUS_MAP[$node]} $cpu"
             fi
         fi
     done
     
-    # Create arrays of NUMA nodes by socket
-    SOCKET0_NUMAS=()
-    SOCKET1_NUMAS=()
-    if [ ! -z "${SOCKET_TO_NUMA[0]}" ]; then
-        read -a SOCKET0_NUMAS <<< "${SOCKET_TO_NUMA[0]}"
-    fi
-    if [ ! -z "${SOCKET_TO_NUMA[1]}" ]; then
-        read -a SOCKET1_NUMAS <<< "${SOCKET_TO_NUMA[1]}"
-    fi
-    
-    echo "- NUMA nodes on socket 0: ${SOCKET0_NUMAS[*]:-none}"
-    echo "- NUMA nodes on socket 1: ${SOCKET1_NUMAS[*]:-none}"
-    
-    # Detect if we have multiple NUMA per socket
-    MULTI_NUMA_PER_SOCKET=0
-    for s in "${!SOCKET_TO_NUMA[@]}"; do
-        NUMA_COUNT_IN_SOCKET=$(echo "${SOCKET_TO_NUMA[$s]}" | wc -w)
-        if [ "$NUMA_COUNT_IN_SOCKET" -gt 1 ]; then
-            MULTI_NUMA_PER_SOCKET=1
-            break
-        fi
+    # Print discovered topology
+    echo "Socket -> NUMA node mapping:"
+    for socket in "${!SOCKET_NUMA_MAP[@]}"; do
+        echo "- Socket $socket: NUMA nodes ${SOCKET_NUMA_MAP[$socket]}"
     done
     
-    if [ "$MULTI_NUMA_PER_SOCKET" -eq 1 ]; then
-        echo "- Multiple NUMA nodes per socket detected"
+    echo "NUMA node -> CPUs mapping:"
+    for node in "${!NUMA_CPUS_MAP[@]}"; do
+        echo "- NUMA node $node: CPUs ${NUMA_CPUS_MAP[$node]}"
+    done
+    
+    # Select nodes for different placement scenarios
+    # Default to first socket's first NUMA node
+    SOCKET_LIST=(${!SOCKET_NUMA_MAP[@]})
+    FIRST_SOCKET=${SOCKET_LIST[0]:-0}
+    FIRST_SOCKET_NUMAS=(${SOCKET_NUMA_MAP[$FIRST_SOCKET]})
+    NUMA_SAME=${FIRST_SOCKET_NUMAS[0]:-0}
+    
+    # For same-socket, different NUMA scenario
+    if [ ${#FIRST_SOCKET_NUMAS[@]} -gt 1 ]; then
+        NUMA_DIFF_SAME_SOCKET_1=${FIRST_SOCKET_NUMAS[0]}
+        NUMA_DIFF_SAME_SOCKET_2=${FIRST_SOCKET_NUMAS[1]}
     else
-        echo "- Single NUMA node per socket detected"
+        NUMA_DIFF_SAME_SOCKET_1=${FIRST_SOCKET_NUMAS[0]:-0}
+        NUMA_DIFF_SAME_SOCKET_2=${FIRST_SOCKET_NUMAS[0]:-0}
+        echo "Warning: Only one NUMA node in socket $FIRST_SOCKET, using same NUMA for same-socket test"
     fi
     
-    # Recommended NUMA nodes for different placement scenarios
-    echo ""
-    echo "Recommended NUMA nodes for placement scenarios:"
-    
-    # For same_numa
-    NUMA_SAME=0
-    if [ ${#SOCKET0_NUMAS[@]} -gt 0 ]; then
-        NUMA_SAME=${SOCKET0_NUMAS[0]}
-    fi
-    echo "- same_numa: NUMA node $NUMA_SAME"
-    
-    # For diff_numa_same_socket
-    NUMA_DIFF_SAME_SOCKET_1=${SOCKET0_NUMAS[0]:-0}
-    NUMA_DIFF_SAME_SOCKET_2=${SOCKET0_NUMAS[1]:-0}
-    if [ "$MULTI_NUMA_PER_SOCKET" -eq 1 ] && [ ${#SOCKET0_NUMAS[@]} -gt 1 ]; then
-        echo "- diff_numa_same_socket: NUMA nodes ${SOCKET0_NUMAS[0]} and ${SOCKET0_NUMAS[1]}"
+    # For different-socket scenario
+    if [ ${#SOCKET_LIST[@]} -gt 1 ]; then
+        SECOND_SOCKET=${SOCKET_LIST[1]}
+        SECOND_SOCKET_NUMAS=(${SOCKET_NUMA_MAP[$SECOND_SOCKET]})
+        NUMA_DIFF_SOCKET_1=${FIRST_SOCKET_NUMAS[0]:-0}
+        NUMA_DIFF_SOCKET_2=${SECOND_SOCKET_NUMAS[0]:-0}
     else
-        echo "- diff_numa_same_socket: Not available (fallback to same NUMA)"
-        if [ "$SOCKET_COUNT" -gt 1 ]; then
-            echo "  Consider using diff_socket_same_node instead"
-        fi
+        NUMA_DIFF_SOCKET_1=${FIRST_SOCKET_NUMAS[0]:-0}
+        NUMA_DIFF_SOCKET_2=${FIRST_SOCKET_NUMAS[0]:-0}
+        echo "Warning: Only one socket available, using same socket for different-socket test"
     fi
     
-    # For diff_socket_same_node
-    NUMA_DIFF_SOCKET_1=${SOCKET0_NUMAS[0]:-0}
-    NUMA_DIFF_SOCKET_2=${SOCKET1_NUMAS[0]:-0}
-    if [ ${#SOCKET0_NUMAS[@]} -gt 0 ] && [ ${#SOCKET1_NUMAS[@]} -gt 0 ]; then
-        echo "- diff_socket_same_node: NUMA nodes $NUMA_DIFF_SOCKET_1 (socket 0) and $NUMA_DIFF_SOCKET_2 (socket 1)"
-    else
-        echo "- diff_socket_same_node: Not available (single socket system)"
+    # Create binding variables file with our mapping
+    cat > $SCRIPTS_DIR/binding_vars.sh << EOF
+#!/bin/bash
+export NUMA_COUNT=$NUMA_COUNT
+export SOCKET_COUNT=$SOCKET_COUNT
+export NUMA_SAME=$NUMA_SAME
+export NUMA_DIFF_SAME_SOCKET_1=$NUMA_DIFF_SAME_SOCKET_1
+export NUMA_DIFF_SAME_SOCKET_2=$NUMA_DIFF_SAME_SOCKET_2
+export NUMA_DIFF_SOCKET_1=$NUMA_DIFF_SOCKET_1
+export NUMA_DIFF_SOCKET_2=$NUMA_DIFF_SOCKET_2
+
+# Socket to NUMA node mapping
+declare -A SOCKET_NUMA_MAP
+EOF
+
+    # Add the socket mapping
+    for socket in "${!SOCKET_NUMA_MAP[@]}"; do
+        echo "SOCKET_NUMA_MAP[$socket]=\"${SOCKET_NUMA_MAP[$socket]}\"" >> $SCRIPTS_DIR/binding_vars.sh
+    done
+    
+    # Add the NUMA to CPU mapping
+    echo -e "\n# NUMA node to CPU mapping\ndeclare -A NUMA_CPUS_MAP" >> $SCRIPTS_DIR/binding_vars.sh
+    for node in "${!NUMA_CPUS_MAP[@]}"; do
+        echo "NUMA_CPUS_MAP[$node]=\"${NUMA_CPUS_MAP[$node]}\"" >> $SCRIPTS_DIR/binding_vars.sh
+    done
+    
+    chmod +x $SCRIPTS_DIR/binding_vars.sh
+    echo "Hardware topology detected and saved to $SCRIPTS_DIR/binding_vars.sh"
+}
+
+# Generate placement helper scripts
+generate_placement_scripts() {
+    echo "Generating placement helper scripts..."
+    
+    # First, get the topology info from the detect function if not already done
+    if [ ! -f "$SCRIPTS_DIR/binding_vars.sh" ]; then
+        detect_hardware_topology
     fi
     
-    # Export variables for external use
-    export NUMA_COUNT SOCKET_COUNT NUMA_PER_SOCKET MULTI_NUMA_PER_SOCKET
-    export NUMA_SAME NUMA_DIFF_SAME_SOCKET_1 NUMA_DIFF_SAME_SOCKET_2
-    export NUMA_DIFF_SOCKET_1 NUMA_DIFF_SOCKET_2
+    # Source the binding variables
+    source $SCRIPTS_DIR/binding_vars.sh
     
-    echo ""
-    echo "NUMA variables exported to environment"
-    echo "====================================="
+    # Script for binding to the same NUMA node
+    cat > $SCRIPTS_DIR/bind_same_numa.sh << EOF
+#!/bin/bash
+# Bind both processes to the same NUMA node
+source \$(dirname \$0)/binding_vars.sh
+
+# Use the same NUMA for both processes
+BINDING_NODE=\$NUMA_SAME
+
+echo "Binding all processes to NUMA node \$BINDING_NODE"
+numactl --cpunodebind=\$BINDING_NODE --membind=\$BINDING_NODE "\$@"
+EOF
+    chmod +x $SCRIPTS_DIR/bind_same_numa.sh
+
+    # Script for binding to different NUMA nodes on same socket
+    cat > $SCRIPTS_DIR/bind_diff_numa_same_socket.sh << EOF
+#!/bin/bash
+# Bind processes to different NUMA nodes on the same socket
+source \$(dirname \$0)/binding_vars.sh
+
+# Apply binding based on task ID
+if [ "\$SLURM_PROCID" = "0" ]; then
+    echo "Task 0: Binding to NUMA node \$NUMA_DIFF_SAME_SOCKET_1"
+    numactl --cpunodebind=\$NUMA_DIFF_SAME_SOCKET_1 --membind=\$NUMA_DIFF_SAME_SOCKET_1 "\$@"
+else
+    echo "Task 1: Binding to NUMA node \$NUMA_DIFF_SAME_SOCKET_2"
+    numactl --cpunodebind=\$NUMA_DIFF_SAME_SOCKET_2 --membind=\$NUMA_DIFF_SAME_SOCKET_2 "\$@"
+fi
+EOF
+    chmod +x $SCRIPTS_DIR/bind_diff_numa_same_socket.sh
+
+    # Script for binding to different sockets
+    cat > $SCRIPTS_DIR/bind_diff_socket.sh << EOF
+#!/bin/bash
+# Bind processes to different sockets
+source \$(dirname \$0)/binding_vars.sh
+
+# Apply binding based on task ID
+if [ "\$SLURM_PROCID" = "0" ]; then
+    echo "Task 0: Binding to NUMA node \$NUMA_DIFF_SOCKET_1"
+    numactl --cpunodebind=\$NUMA_DIFF_SOCKET_1 --membind=\$NUMA_DIFF_SOCKET_1 "\$@"
+else
+    echo "Task 1: Binding to NUMA node \$NUMA_DIFF_SOCKET_2"
+    numactl --cpunodebind=\$NUMA_DIFF_SOCKET_2 --membind=\$NUMA_DIFF_SOCKET_2 "\$@"
+fi
+EOF
+    chmod +x $SCRIPTS_DIR/bind_diff_socket.sh
+    
+    # Verify the scripts were created
+    ls -l $SCRIPTS_DIR/bind_*.sh
+    
+    echo "Helper scripts generated in $SCRIPTS_DIR:"
+    echo "- bind_same_numa.sh: Bind tasks to the same NUMA node"
+    echo "- bind_diff_numa_same_socket.sh: Bind tasks to different NUMA nodes on same socket"
+    echo "- bind_diff_socket.sh: Bind tasks to different sockets"
 }
 
 # Function to verify process placement for current process
@@ -137,20 +235,20 @@ verify_placement() {
     fi
     
     if command -v lscpu >/dev/null 2>&1; then
-        CPUS=$(taskset -cp $$ 2>/dev/null | grep -o "[0-9,]*$")
+        CPUS=$(taskset -cp $$ 2>/dev/null | grep -o "[0-9,-]*$" || echo "Unknown")
         echo "CPUs: $CPUS"
         
         # Get first CPU in the mask for node detection
-        FIRST_CPU=$(echo $CPUS | cut -d, -f1)
+        FIRST_CPU=$(echo $CPUS | cut -d, -f1 | cut -d- -f1)
         
-        SOCKET=$(lscpu -p=cpu,socket | grep -E "(^|,)$FIRST_CPU(,|$)" | cut -d, -f2 | head -1)
+        SOCKET=$(lscpu -p=cpu,socket | grep "^$FIRST_CPU," | cut -d, -f2)
         echo "Socket: $SOCKET"
         
-        NUMA=$(lscpu -p=cpu,node | grep -E "(^|,)$FIRST_CPU(,|$)" | cut -d, -f2 | head -1)
+        NUMA=$(lscpu -p=cpu,node | grep "^$FIRST_CPU," | cut -d, -f2)
         echo "NUMA node: $NUMA"
         
         # Additional CPU info
-        CORE=$(lscpu -p=cpu,core | grep -E "(^|,)$FIRST_CPU(,|$)" | cut -d, -f2 | head -1)
+        CORE=$(lscpu -p=cpu,core | grep "^$FIRST_CPU," | cut -d, -f2)
         echo "Core: $CORE"
     else
         echo "CPU mapping: lscpu not available"
@@ -159,68 +257,29 @@ verify_placement() {
     echo "============================"
 }
 
-# Generate placement helper script
-generate_placement_scripts() {
-    echo "Generating placement helper scripts..."
-    
-    # Script for binding to the same NUMA node
-    cat > $LOG_DIR/bind_same_numa.sh << EOF
-#!/bin/bash
-# Bind both processes to the same NUMA node
-numactl --cpunodebind=$NUMA_SAME --membind=$NUMA_SAME \$@
-EOF
-    chmod +x $LOG_DIR/bind_same_numa.sh
-    
-    # Script for binding to different NUMA nodes on same socket
-    cat > $LOG_DIR/bind_diff_numa_same_socket.sh << EOF
-#!/bin/bash
-# Bind processes to different NUMA nodes on the same socket
-if [ "\$SLURM_PROCID" = "0" ]; then
-    numactl --cpunodebind=$NUMA_DIFF_SAME_SOCKET_1 --membind=$NUMA_DIFF_SAME_SOCKET_1 \$@
-else
-    numactl --cpunodebind=$NUMA_DIFF_SAME_SOCKET_2 --membind=$NUMA_DIFF_SAME_SOCKET_2 \$@
-fi
-EOF
-    chmod +x $LOG_DIR/bind_diff_numa_same_socket.sh
-    
-    # Script for binding to different sockets
-    cat > $LOG_DIR/bind_diff_socket.sh << EOF
-#!/bin/bash
-# Bind processes to different sockets
-if [ "\$SLURM_PROCID" = "0" ]; then
-    numactl --cpunodebind=$NUMA_DIFF_SOCKET_1 --membind=$NUMA_DIFF_SOCKET_1 \$@
-else
-    numactl --cpunodebind=$NUMA_DIFF_SOCKET_2 --membind=$NUMA_DIFF_SOCKET_2 \$@
-fi
-EOF
-    chmod +x $LOG_DIR/bind_diff_socket.sh
-    
-    echo "Helper scripts generated in $LOG_DIR:"
-    echo "- bind_same_numa.sh: Bind tasks to the same NUMA node"
-    echo "- bind_diff_numa_same_socket.sh: Bind tasks to different NUMA nodes on same socket"
-    echo "- bind_diff_socket.sh: Bind tasks to different sockets"
-}
-
 # Main function
 main() {
-    # If running under Slurm, just verify placement
-    if [ -n "$SLURM_PROCID" ]; then
-        verify_placement
-        return
-    fi
+    # First argument is the command
+    cmd="$1"
     
-    # Otherwise run full detection
-    detect_hardware_topology
+    # Remove first argument for clean processing
+    shift
     
-    # If requested, generate helper scripts
-    if [ "$1" = "--generate-scripts" ]; then
-        generate_placement_scripts
-    fi
-    
-    # Always verify current process placement
-    echo ""
-    echo "Current process placement:"
-    verify_placement
+    case "$cmd" in
+        --generate-scripts)
+            generate_placement_scripts
+            return 0
+            ;;
+        --verify)
+            verify_placement
+            return 0
+            ;;
+        *)
+            # Default behavior: just detect topology
+            detect_hardware_topology
+            return 0
+            ;;
+    esac
 }
 
 # Run main function with command line arguments

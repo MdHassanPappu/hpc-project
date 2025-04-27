@@ -129,22 +129,12 @@ class OSUMicroBenchmarkBase(rfm.RunOnlyRegressionTest):
         if system in REFERENCE_VALUES:
             # Set metric-specific reference values
             if self.metric in REFERENCE_VALUES[system]:
-                if self.metric == 'latency':
-                    # For latency, use either multi-node or default reference
-                    ref_key = self.placement_type if self.placement_type  in REFERENCE_VALUES[system][self.metric] else 'default'
-                    self.reference = {
-                        key: {
-                            self.metric: REFERENCE_VALUES[system][self.metric][ref_key]
-                        }
+                ref_key = self.placement_type if self.placement_type  in REFERENCE_VALUES[system][self.metric][self.binary_source] else 'default'
+                self.reference = {
+                    key: {
+                        self.metric: REFERENCE_VALUES[system][self.metric][self.binary_source][ref_key]
                     }
-                else:  # bandwidth
-                    # For latency, use either multi-node or default reference
-                    ref_key = self.placement_type if self.placement_type  in REFERENCE_VALUES[system][self.metric][self.binary_source] else 'default'
-                    self.reference = {
-                        key: {
-                            self.metric: REFERENCE_VALUES[system][self.metric][self.binary_source][ref_key]
-                        }
-                    }
+                }
         # print(f"Reference {self.reference}")                
         
     
@@ -242,8 +232,8 @@ class OSUMicroBenchmarkBase(rfm.RunOnlyRegressionTest):
 
 
 @rfm.simple_test
-class OSUDistributionPlacementTest(OSUMicroBenchmarkBase):
-    """Tests process placement using Slurm's --distribution mechanism"""
+class OSUPlacementTest(OSUMicroBenchmarkBase):
+    """Tests process placement using numactl mechanism"""
     
     placement_type = parameter([
         'same_numa',
@@ -264,79 +254,82 @@ class OSUDistributionPlacementTest(OSUMicroBenchmarkBase):
         """Configure Slurm distribution options for different placement strategies"""
         self.num_tasks = 2
         self.num_cpus_per_task = 1
-        self.exclusive = False  # Allow resource sharing
+        self.exclusive = True  # Allow resource sharing
         self.job.launcher.options = []  # Reset options
         
-        script_path = os.path.expanduser('~/hpc-project/scripts/2.Hardware-Detection.sh')
-        self.prerun_cmds.append(f'chmod +x {script_path}')
-    
-        # Add it to postrun commands for verification
-        self.postrun_cmds = [f'srun -n2 {script_path}']
-    
+        source_script = os.path.expanduser('~/hpc-project/scripts/2.Hardware-Detection.sh')    
+
+        self.prerun_cmds.extend([
+            '# Create private copies of hardware detection script in stage directory',
+            f'cp {source_script} ./hw-detect.sh',
+            'chmod 755 ./hw-detect.sh',
+            'echo "====== Available NUMA nodes on this host ======"',
+            'numactl -H | grep "^node" || echo "No NUMA information available"',
+            'echo "Generating binding scripts in stage directory..."',
+            './hw-detect.sh --generate-scripts',
+            'echo "Verifying binding scripts were generated:"',
+            'ls -la ./bind_*.sh || echo "Failed to generate binding scripts"',
+            'chmod 755 ./bind_*.sh 2>/dev/null || echo "No binding scripts to chmod"'
+        ])
+        
         if self.placement_type == 'same_numa':
-            self.num_nodes = 1
-            self.num_tasks_per_node = 2
+            self.num_nodes           = 1                  # one node
+            self.num_tasks_per_node  = 2                  # two MPI ranks
+            self.sockets_per_node    = 1                 # ask SLURM for 2 sockets
+            self.num_tasks_per_socket= 2
             
-            # Pack tasks onto the same core group to ensure same NUMA node
-            self.job.launcher.options = [
-                '--distribution=block:block:block',  # Simple block distribution
-                '--cpu-bind=none'        # No specific binding
+            self.job.launcher.options = [    
+                '--distribution=block:block:block',                            
+                '--cpu-bind=threads,verbose',
+                # './bind_same_numa.sh'
             ]
             
-            # Add verification directly in launcher
-            self.prerun_cmds.append('echo "Verifying same NUMA placement:"')
-            self.postrun_cmds = ['srun -n2 ./verify_placement.sh']
-
         elif self.placement_type == 'diff_numa_same_socket':
-            self.num_nodes = 1
-            self.num_tasks_per_node = 2
-            
-            # First check if we have multiple NUMA per socket
-            self.prerun_cmds.extend([
-                'NUMA_PER_SOCKET=$(( $NUMA_COUNT / $SOCKET_COUNT ))',
-                'echo "- $NUMA_PER_SOCKET NUMA node(s) per socket"'
-            ])
-            
-            # Try to distribute across NUMA domains
-            self.job.launcher.options = [
-                '--distribution=block:cyclic:block',  # Cyclic distribution
-                '--cpu-bind=cores'        # Bind to cores
-            ]
-            
-            # Add verification
-            self.prerun_cmds.append('echo "Verifying different NUMA placement:"')
-            self.postrun_cmds = ['srun -n2 ./verify_placement.sh']
-
+            self.num_nodes           = 1
+            self.num_tasks_per_node  = 2 
+            self.sockets_per_node    = 1                 # ask SLURM for 2 sockets
+            self.num_tasks_per_socket= 2
+                        
+            self.job.launcher.options = [   
+                '--distribution=block:block',                       
+                '--cpu-bind=cores,verbose',
+                # './bind_diff_numa_same_socket.sh'
+            ]        
+    
         elif self.placement_type == 'diff_socket_same_node':
-            self.num_nodes = 1
-            self.num_tasks_per_node = 2
-            
-            # Check if we have multiple sockets
-            self.prerun_cmds.extend([
-                'if [ "$SOCKET_COUNT" -lt 2 ]; then',
-                '  echo "WARNING: System has only $SOCKET_COUNT socket(s). This test requires at least 2."',
-                'fi'
-            ])
-            
-            # Try to distribute across sockets if possible
-            self.job.launcher.options = [
-                '--distribution=block:cyclic',   # Try to spread across sockets
-                '--cpu-bind=sockets'             # Bind to sockets
+            self.num_nodes           = 1
+            self.num_tasks_per_node  = 2  
+            self.sockets_per_node    = 2                 # ask SLURM for 2 sockets
+            self.num_tasks_per_socket= 1    
+                              
+            self.job.launcher.options = [     
+                '--distribution=block:cyclic',                  
+                '--cpu-bind=sockets,verbose',
+                # './bind_diff_socket.sh'
             ]
-            
-            # Add verification
-            self.prerun_cmds.append('echo "Verifying different socket placement:"')
-            self.postrun_cmds = ['srun -n2 ./verify_placement.sh']
 
         elif self.placement_type == 'diff_node':
-            # Make it flexible based on allocation
-            self.num_nodes = 2  
-            self.num_tasks_per_node = 1  
+            # For multi-node, keep using Slurm's mechanism as it's working correctly
+            self.num_nodes = 2
+            self.num_tasks_per_node = 1
             
-            # Use the shell variable in launcher options
-            # distributes tasks across nodes in a round-robin fashion
-            self.job.launcher.options = ['-N2 -n2 --ntasks-per-node=1 --exclusive --distribution=cyclic:block:block']
-            
-            # Add verification
-            self.prerun_cmds.append('echo "Verifying node distribution:"')
-            self.postrun_cmds = ['srun -n2 ./verify_placement.sh']
+            self.job.launcher.options = [
+                '--distribution=cyclic',
+                '--cpu-bind=verbose',
+            ]
+     
+        # Add comprehensive verification commands BEFORE running benchmark
+        self.prerun_cmds.extend([
+            'echo "==== SLURM Resource Allocation Details ===="',
+            'env | grep SLURM',
+            'echo "==== Process Binding Verification (will run before benchmark) ===="',
+            'srun -n2 bash -c \'echo "TASK $SLURM_PROCID on $(hostname): CPU mask $(taskset -p $$)"\''
+        ])
+        
+        # Add detailed verification AFTER running benchmark
+        self.postrun_cmds = [
+            'echo "==== Detailed Process Placement Verification (after benchmark) ===="',
+            'srun -n2 bash -c \'echo "TASK $SLURM_PROCID on $(hostname): CPU $(taskset -cp $$), NUMA node $(cat /proc/self/status | grep Mems_allowed_list | cut -f2), Socket $(lscpu -p=cpu,socket | grep "^$(taskset -cp $$ | grep -o "[0-9]*$")," | cut -d, -f2)"\'',
+            'echo "==== Verifying process placement ===="',
+            'srun -n2 ./hw-detect.sh --verify'
+        ]

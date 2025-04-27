@@ -68,5 +68,12 @@ site_configuration = {
             'ftn': 'gfortran',  
             'target_systems': ['aion', 'iris']  
         },  
+    ],
+    'general': [
+        {
+            'report_file': './reports/report-{sessionid}.json',  # Report file pattern
+            'keep_stage_files': False,                    # Don't keep stage files
+            'purge_environment': True,                    # Clean environment between tests
+        }
     ]  
 }  
