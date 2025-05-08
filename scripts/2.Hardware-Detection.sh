@@ -2,7 +2,7 @@
 
 # Setup environment
 LOG_DIR="$HOME/hpc-project/log"
-SCRIPTS_DIR="$PWD"
+SCRIPTS_DIR="$HOME/hpc-project/scripts"
 mkdir -p "$LOG_DIR" "$SCRIPTS_DIR"
 
 # Function to verify process placement for current process
@@ -50,7 +50,8 @@ main() {
     
     case "$cmd" in
         --generate-scripts)
-            python 2.1.Hardware-Detection.py --generate-scripts
+            module load devel/ReFrame/4.7.4-GCCcore-13.2.0
+            python $SCRIPTS_DIR/2.1.Hardware-Detection.py --generate-scripts
             return 0
             ;;
         --verify)
@@ -59,7 +60,8 @@ main() {
             ;;
         *)
             # Default behavior: just detect topology
-            python 2.1.Hardware-Detection.py 
+            module load devel/ReFrame/4.7.4-GCCcore-13.2.0
+            python $SCRIPTS_DIR/2.1.Hardware-Detection.py 
             return 0
             ;;
     esac

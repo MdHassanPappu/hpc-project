@@ -3,6 +3,7 @@
 rm -rf ./bind_*.sh 2>/dev/null || true
 
 module purege
+module load devel/ReFrame/4.7.4-GCCcore-13.2.0
 
 # Default method is local
 METHOD="local"
