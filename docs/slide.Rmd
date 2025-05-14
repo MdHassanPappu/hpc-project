@@ -23,3 +23,7 @@ $$
   \require{cancel}
 $$
 ---
+
+install.packages("xaringan")
+install.packages("rmarkdown")
+install.packages("tinytex")
