@@ -44,11 +44,12 @@ install_local() {
     INSTALL_DIR=~/osu-micro-benchmarks-${OSU_VERSION}
     BUILD_DIR=${INSTALL_DIR}/build
     EBROOTOSUMINMICROMINBENCHMARKS="$BUILD_DIR"
-    export EBROOTOSUMINMICROMINBENCHMARKS
+    export EBROOTOSUMINMICROMINBENCHMARKS$
 
     if [[ -d "$EBROOTOSUMINMICROMINBENCHMARKS/libexec/osu-micro-benchmarks/mpi/one-sided" ]]; then
         echo "✅ OSU Benchmarks already compiled locally at $BUILD_DIR"
         echo "export EBROOTOSUMINMICROMINBENCHMARKS=$EBROOTOSUMINMICROMINBENCHMARKS" >> "$TEMP_ENV_FILE"
+        echo "export PATH=\"\$EBROOTOSUMINMICROMINBENCHMARKS/libexec/osu-micro-benchmarks/mpi/one-sided:\$PATH\"" >> "$TEMP_ENV_FILE"
 	    [[ "$VERIFY" == "true" || "$VERIFY" == "yes" ]] && verify_osu
         return
     fi
@@ -65,7 +66,7 @@ install_local() {
     ../configure CC=mpicc CFLAGS=-I$(pwd)/../util --prefix=$(pwd)
     make -j && make install
 
-    echo "export EBROOTOSUMINMICROMINBENCHMARKS=$EBROOTOSUMINMICROMINBENCHMARKS" >> "$TEMP_ENV_FILE"
+    echo "export EBROOTOSUMINMICROMINBENCHMARKS=EBROOTOSUMINMICROMINBENCHMARKS" >> "$TEMP_ENV_FILE"
     [[ "$VERIFY" == "true" || "$VERIFY" == "yes" ]] && verify_osu
 
 }
@@ -74,21 +75,26 @@ install_easybuild() {
     print_header "EasyBuild Method"
     module purge
     module load tools/EasyBuild/5.0.0
+    module load toolchain/gompi/2023b
 
     if module avail perf/OSU-Micro-Benchmarks/${OSU_VERSION}-gompi-2023b 2>&1 | grep -q "$OSU_VERSION"; then
         echo "✅ OSU module found in EasyBuild"
+        
     else
         echo "⚠️ Module not found, trying to build with EasyBuild..."
         eb ~/.local/easybuild/software/EasyBuild/5.0.0/easybuild/easyconfigs/o/OSU-Micro-Benchmarks/OSU-Micro-Benchmarks-${OSU_VERSION}-gompi-2023b.eb
     fi
 
     echo "module load perf/OSU-Micro-Benchmarks/${OSU_VERSION}-gompi-2023b" >> "$TEMP_ENV_FILE"
-    module load perf/OSU-Micro-Benchmarks/${OSU_VERSION}-gompi-2023b
+    echo "export PATH=\"\$EBROOTOSUMINMICROMINBENCHMARKS/libexec/osu-micro-benchmarks/mpi/one-sided:\$PATH\"" >> "$TEMP_ENV_FILE"
+    module use "${EASYBUILD_PREFIX}/modules/all"
+    module load perf/OSU-Micro-Benchmarks/${OSU_VERSION}-gompi-2023b 
     [[ "$VERIFY" == "true" || "$VERIFY" == "yes" ]] && verify_osu
 }
 
 install_eessi() {
     print_header "EESSI Method"
+    module purge
 
     if ! module avail EESSI 2>&1 | grep -q EESSI; then
         echo "❌ EESSI module not available"
@@ -101,6 +107,7 @@ install_eessi() {
         echo "✅ Found OSU Benchmarks in EESSI"
         echo "module load EESSI" >> "$TEMP_ENV_FILE"
         echo "module load OSU-Micro-Benchmarks/${OSU_VERSION}-gompi-2023b" >> "$TEMP_ENV_FILE"
+        echo "export PATH=\"\$EBROOTOSUMINMICROMINBENCHMARKS/libexec/osu-micro-benchmarks/mpi/one-sided:\$PATH\"" >> "$TEMP_ENV_FILE"
         module load OSU-Micro-Benchmarks/${OSU_VERSION}-gompi-2023b
         [[ "$VERIFY" == "true" || "$VERIFY" == "yes" ]] && verify_osu
     else
