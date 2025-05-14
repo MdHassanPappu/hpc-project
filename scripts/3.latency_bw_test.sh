@@ -13,12 +13,23 @@ module load tools/numactl/2.0.16-GCCcore-13.2.0
 WARMUP=10
 ITERATIONS=1000
 
-# CPU masks for intra-node placement 
+# CPU masks for intra-node placement
+
+# Aion-cluster 
 declare -A CPU_MASKS=(
     [same_numa]="0x1,0x10"
     [diff_numa_same_socket]="0x1,0x10000"
     [diff_socket_same_node]="0x1,0x10000000000000000"
 )
+
+
+
+## Iris-Cluster 
+# declare -A CPU_MASKS=(
+#     [same_numa]="0x1,0x4"
+#     [diff_numa_same_socket]="0x1,0x2"
+#     [diff_socket_same_node]="0x1,0x2"
+# )
 
 PLACEMENTS=("same_numa" "diff_numa_same_socket" "diff_socket_same_node" "inter_node")
 BENCHMARKS=("osu_get_latency" "osu_get_bw")
@@ -92,6 +103,4 @@ for placement in "${PLACEMENTS[@]}"; do
 done
 
 echo "==== Test Complete ====" | tee -a "$OUTPUT_FILE"
-# echo "== results are stored in the log directory ==" | tee -a "$OUTPUT_FILE"
-# echo "============================================" | tee -a "$OUTPUT_FILE"
-echo "Log file: $HOME/hpc-project/log/" | tee -a "$OUTPUT_FILE"
+echo "Results are store in : $HOME/hpc-project/log/" | tee -a "$OUTPUT_FILE"
