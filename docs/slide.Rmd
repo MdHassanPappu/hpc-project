@@ -1,0 +1,25 @@
+---
+title: HPC Project
+subtitle: High Performance Computing
+author: Jahid, Bingyu
+output: 
+  xaringan::moon_reader:
+    self_contained: true
+    css: [default, uchicago_pol_meth.css]
+    nature:
+      highlightLines: true
+      ratio: '16:9'
+---
+
+title: "HPC Project"
+subtitle: "High Performance Computing"
+ author: "Jahid, Bingyu"
+  
+---
+class: title-slide
+
+# Welcome!
+$$
+  \require{cancel}
+$$
+---
