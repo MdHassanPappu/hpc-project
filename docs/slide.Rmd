@@ -24,6 +24,33 @@ $$
 $$
 ---
 
+For using R Markdown to create slides, we need to install the following packages:
+```{r, eval=FALSE}
 install.packages("xaringan")
 install.packages("rmarkdown")
 install.packages("tinytex")
+```
+
+
+---
+Outline
+- Introduction
+- Installation
+- Topology
+  - Pysical node, Sockets, NUMAs, Cores
+  - Threads, Hyperthreading
+  - Memory
+  - Cache
+- Benchmarking
+  - measuement
+    - Bandwidth
+    - Latency
+  - srun
+    - parameters 
+- Reframe
+  - parameters: self, job.options, job_launch.options
+  - sbatch
+- Performance
+- Conclusion
+
+---
