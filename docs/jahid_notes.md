@@ -12,7 +12,7 @@ salloc -N 1 -n 2 --exclusive
 
 ---
 
-## 2. Inspect CPU and NUMA Topology
+## 2. Inspect CPU and NUMA Topology.
 
 ```bash
 lscpu | grep -E "Socket|NUMA|CPU"
@@ -28,7 +28,6 @@ taskset -cp $$
 ## Setup environment
 
 ```bash
-module load lang/Python/3.11.5-GCCcore-13.2.0
 module load tools/numactl/2.0.16-GCCcore-13.2.0
 ```
 
