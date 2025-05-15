@@ -8,6 +8,7 @@ CLUSTER_NAME=$(hostname -f | cut -d. -f1 | cut -d- -f1)
 rm -rf ~/hpc-project/reframe-output/*
 rm -rf ~/hpc-project/tests/stage/$CLUSTER_NAME/*
 rm -rf ~/hpc-project/tests/output/$CLUSTER_NAME/*
+rm -rf ~/hpc-project/tests/perflogs/$CLUSTER_NAME/*
 rm -f ~/hpc-project/reports/osu-benchmark.json
 
-reframe --config-file ulhpc.py --checkpath 4.1-OSU-BENCHMARK-ONESIDE-TEST.py --name 'OSUPlacementTest' --run --report-file=reports/osu-benchmark.json
+reframe --config-file ulhpc.py --checkpath 4.1-OSU-BENCHMARK-ONESIDE-TEST.py --name 'OSUPlacementTest' --run --report-file=reports/osu-benchmark-$CLUSTER_NAME.json
