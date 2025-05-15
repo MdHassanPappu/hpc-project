@@ -1,5 +1,3 @@
-/* @theme uchicago */
-
 /*
 Define UChicago Colors
 */
@@ -25,7 +23,27 @@ Define UChicago Colors
   --accent: var(--orange);
   --text: var(--black);
   --text-inverse: var(--light-gray);
-/* Font sizes */
+}
+
+/*
+Define font size, to mimick beamer.
+Base font size: 20px
+Calculate relative font sizes:
+round(20 * data.frame(
+  tiny = 0.763650977,
+  scriptsize = 0.916712714,
+  footnotesize = 0.916712714,
+  small = 0.916712714,
+  normalsize = 1.10,
+  large = 1.320088411,
+  Large = 1.583664038,
+  LARGE = 1.900838901,
+  huge = 2.281006681,
+  Huge = 2.281006681,
+  references = 0.8401818))
+*/
+
+:root{
   --size-tiny: 15px;
   --size-scriptsize: 18px;
   --size-footnotesize: 18px;
@@ -37,167 +55,287 @@ Define UChicago Colors
   --size-LARGE: 35px;
   --size-huge: 46px;
   --size-Huge: 46px;
+/* New size for list of reference: halfway through tiny and small */
   --size-references: 17px;
 }
 
-/* Default slide styles */
-section {
+.remark-slide-content,
+.remark-slide-content p,
+.remark-slide-content li p {
   color: var(--text);
   font-size: var(--size-normalsize);
-  font-family: 'Raleway', 'Arial', 'Helvetica', sans-serif;
-  padding: 40px;
 }
 
-section p {
-  font-size: var(--size-normalsize);
-  color: var(--text);
-}
-
-section h1, section h2, section h3, section h4, section h5, section h6 {
+h1, h2, h3, h4, h5, h6 {
   color: var(--main);
   border: 0px;
   margin: 0px;
-  font-family: 'Raleway';
-  font-weight: 400;
 }
 
-section h1 {
+h1 {
   font-size: var(--size-LARGE);
 }
 
-section h2 {
+h2 {
   font-size: var(--size-Large);
 }
 
-section h3 {
+h3 {
   font-size: var(--size-large);
   color: var(--accent);
 }
 
-section a, section a > code {
+a, a > code, a:visited {
   color: var(--main);
   text-decoration: none;
 }
 
-section a:hover {
+a:hover {
   text-decoration: underline;
 }
 
-/* Inverse slides */
-section.inverse {
-  background-color: var(--main);
-  color: var(--text-inverse);
+.footnote {
+  position: absolute;
+  bottom: 0%;
+  left: 15%;
+  padding-right: 15%;
+  font-size: var(--size-footnotesize);
 }
 
-section.inverse h1,
-section.inverse h2,
-section.inverse h3,
-section.inverse h4,
-section.inverse h5,
-section.inverse h6 {
-  color: var(--text-inverse);
+.remark-code-line-highlighted {
+  background-color: var(--yellow);
 }
 
-/* Title slide */
-section.title {
-  background-position: 5% 5%;
-  background-size: 4cm;
-}
-
-section.title h1 {
-  padding-top: 33%;
-  text-align: left;
-  padding-bottom: 3%;
-  margin-bottom: 3%;
-}
-
-section.title h2, 
-section.title h3, 
-section.title h4, 
-section.title h5, 
-section.title h6 {
-  text-align: left;
-  padding-top: 0%;
-  margin-top: 0%;
-}
-
-/* Code blocks */
-section code {
+.remark-code {
   border-radius: 5px;
   font-size: var(--size-scriptsize);
 }
 
-/* Two column layout */
-.columns {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
+/*
+.remark-inline-code {
+  font-size: var(--size-normalsize);
+}
+*/
+
+
+.inverse {
+  background-image: none;
+  background-color: var(--main);
+  color: var(--text-inverse);
+  text-shadow: 0 0 0px #333;
 }
 
-/* Tables */
-table {
-  margin: auto;
-  border-top: 1px solid var(--light-gray);
-  border-bottom: 1px solid var(--light-gray);
+.inverse h1,
+.inverse h2,
+.inverse h3,
+.inverse h4,
+.inverse h5,
+.inverse h6 {
+  color: var(--text-inverse);
 }
 
-table thead th {
-  border-bottom: 1px solid var(--light-gray);
+.pull-left {
+  float: left;
+  width: 45%;
 }
 
-th, td {
-  padding: 5px;
+.pull-right {
+  float: right;
+  width: 45%;
 }
 
-thead, tfoot, tr:nth-child(even) {
-  background: #ffffff;
+.pull-right + * {
+  clear: both;
 }
 
-/* Blockquotes */
+img,
+video,
+iframe {
+  max-width: 100%;
+}
+
 blockquote {
   border-left: solid 5px var(--accent);
   padding-left: 1em;
   color: var(--main);
 }
 
-/* Footer for footnotes */
-footer {
-  position: absolute;
-  bottom: 0;
-  left: 15%;
-  right: 15%;
+.remark-slide table {
+  margin: auto;
+  border-top: 1px solid var(--light-warm-grey);
+  border-bottom: 1px solid var(--light-warm-grey);
+}
+
+.remark-slide table thead th {
+  border-bottom: 1px solid var(--light-warm-grey);
+}
+
+th, td {
+  padding: 5px;
+}
+
+.remark-slide thead,
+.remark-slide tfoot,
+.remark-slide tr:nth-child(even) {
+  background: var(--white);
+}
+
+@page {
+  margin: 0;
+}
+
+@media print {
+  .remark-slide-scaler {
+    width: 100% !important;
+    height: 100% !important;
+    transform: scale(1) !important;
+    top: 0 !important;
+    left: 0 !important;
+  }
+}
+
+.remark-slide-number {
+  font-size: var(--size-scriptsize);
+  color: var(--text);
+}
+
+.title-slide .remark-slide-number,
+.inverse .remark-slide-number {
+  display: none;
+}
+
+.mjx-chtml {
+  font-size: var(--size-normalsize) !important;
+}
+
+.title-slide {
+  /* background-image: url(https://user-images.githubusercontent.com/163582/48426397-4fe84700-e72c-11e8-9f1d-84d245d299c0.png); */
+  background-position: 5% 5%;
+  background-size: 4cm;
+}
+
+.title-slide h1 {
+  padding-top: 33%;
+  text-align: left;
+  padding-bottom: 3%;
+  margin-bottom: 3%;
+}
+
+.title-slide h2, h3, h4, h5, h6 {
+  text-align: left;
+  padding-top: 0%;
+  margin-top: 0%;
+}
+
+/*
+Extra classes for size and color
+*/
+
+.maroon {
+  color: var(--maroon);
+}
+
+.yellow {
+  color: var(--yellow);
+}
+
+.orange {
+  color: var(--orange);
+}
+
+.red {
+  color: var(--red);
+}
+
+.light-green {
+  color: var(--light-green);
+}
+
+.dark-green {
+  color: var(--dark-green);
+}
+
+/* etc -- if we want these */
+
+.main {
+  color: var(--main);
+}
+
+.accent {
+  color: var(--accent);
+}
+
+.text {
+  color: var(--text);
+}
+
+.text-inverse {
+  color: var(--text-inverse);
+  text-shadow: 0 0 0 0;
+}
+
+.tiny {
+  font-size: var(--size-tiny);
+}
+
+.scriptsize {
+  font-size: var(--size-scriptsize);
+}
+
+.footnotesize {
   font-size: var(--size-footnotesize);
 }
 
-/* Utility classes for colors */
-.maroon { color: var(--maroon); }
-.yellow { color: var(--yellow); }
-.orange { color: var(--orange); }
-.red { color: var(--red); }
-.light-green { color: var(--light-green); }
-.dark-green { color: var(--dark-green); }
-.blue { color: var(--blue); }
-.violet { color: var(--violet); }
-.main { color: var(--main); }
-.accent { color: var(--accent); }
-.text { color: var(--text); }
-.text-inverse { color: var(--text-inverse); }
+.small {
+  font-size: var(--size-small);
+}
 
-/* Utility classes for font sizes */
-.tiny { font-size: var(--size-tiny); }
-.scriptsize { font-size: var(--size-scriptsize); }
-.footnotesize { font-size: var(--size-footnotesize); }
-.small { font-size: var(--size-small); }
-.bitsmall { font-size: var(--size-bitsmall); }
-.normalsize { font-size: var(--size-normalsize); }
-.large { font-size: var(--size-large); }
-.Large { font-size: var(--size-Large); }
-.LARGE { font-size: var(--size-LARGE); }
-.huge { font-size: var(--size-huge); }
-.Huge { font-size: var(--size-Huge); }
-.references { font-size: var(--size-references); }
+.bitsmall {
+  font-size: var(--size-bitsmall);
+}
 
-/* Images and media */
-img, video, iframe {
-  max-width: 100%;
+.normalsize {
+  font-size: var(--size-normalsize);
+}
+
+.large {
+  font-size: var(--size-large);
+}
+
+.Large {
+  font-size: var(--size-Large);
+}
+
+.LARGE {
+  font-size: var(--size-LARGE);
+}
+
+.huge {
+  font-size: var(--size-huge);
+}
+
+.Huge {
+  font-size: var(--size-Huge);
+}
+
+.references {
+  font-size: var(--size-references);
+}
+
+/* Fonts */
+
+/*.remark-code, .remark-inline-code { font-family: 'Raleway', 'Arial', sans-serif; }*/
+
+body { font-family: 'Raleway', 'Arial', 'Helvetica', sans-serif; }
+
+h1, h2, h3 {
+  font-family: 'Raleway';
+  font-weight: 400;
+}
+
+/* raleway-regular - latin */
+@font-face {
+  font-family: 'Raleway';
+  font-style: normal;
+  font-weight: 400;
 }

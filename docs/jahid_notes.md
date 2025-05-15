@@ -1,6 +1,18 @@
 ## SLURM Benchmarking: CPU Binding 
 ---
 
+
+## Task 
+
+- check again 4  cases, local. and automate with single scripts.
+
+- reports for local and reframe 
+
+- plot + reframe plot 
+
+- reframe. verify bingyu code( try in my own way ) 
+
+- 
 ##  1. Allocate a Full Node Exclusively
 
 ```bash
@@ -20,78 +32,44 @@ lscpu | grep -E "Socket|NUMA|CPU"
 
 ---
 
-##  3. Check Current Shell CPU Affinity
-
-```bash
-taskset -cp $$
-```
-## Setup environment
-
-```bash
-module load lang/Python/3.11.5-GCCcore-13.2.0
-module load tools/numactl/2.0.16-GCCcore-13.2.0
-```
-
 ---
 
 ### 🔸 Case 1: Intra-node – Same NUMA Node
 
 ```bash
-srun -n 2 --cpu-bind=verbose,mask_cpu:0x3,0xc numactl --show
+srun -n 2 --cpu-bind=mask_cpu:0x1,0x10 osu_get_latency -m 8192:8192
 
-srun -n 2 --cpu-bind=verbose,mask_cpu:0x3,0xc ./2.Hardware-Detection.sh
-
-srun -n 2 --cpu-bind=verbose,mask_cpu:0x3,0xc osu_get_latency -m 8192:8192
-
-srun -n 2 --cpu-bind=verbose,mask_cpu:0x3,0xc osu_get_bw -m 1048576:1048576
+srun -n 2 --cpu-bind=mask_cpu:0x1,0x10 osu_get_bw -m 1048576:1048576
 ```
-- Task 0 → CPU 0-1 (Numa node 0)  (Socket 0)  
-- Task 1 → CPU 2-3 (Numa node 0)  (Socket 0)
+- Task 0 on : CPU(s) 0, Socket 0, NUMA node 0
 
-### Ensuring mem-bind for same node 
-```bash
-srun -n 2 --cpu-bind=verbose,mask_cpu:0x3,0xc bash -c '
-numactl --membind=0 numactl --show'
+- Task 1 on : CPU(s) 4, Socket 0, NUMA node 0
 
-srun -n 2 --cpu-bind=verbose,mask_cpu:0x3,0xc bash -c '
-numactl --membind=0 osu_get_latency'
-
-srun -n 2 --cpu-bind=verbose,mask_cpu:0x3,0xc bash -c '
-numactl --membind=0 osu_get_bw'
-```
 ---
 
 ### 🔸 Case 2: Intra-node – Same Socket, Different NUMA Nodes 
 
 ```bash
-srun -n 2 --cpu-bind=verbose,mask_cpu:0x3,0x30000 numactl --show
+srun -n 2 --cpu-bind=mask_cpu:0x1,0x10000 osu_get_latency -m 8192:8192
 
-srun -n 2 --cpu-bind=verbose,mask_cpu:0x3,0x30000 ./2.Hardware-Detection.sh
-
-srun -n 2 --cpu-bind=verbose,mask_cpu:0x3,0x30000 osu_get_latency -m 8192:8192
-
-srun -n 2 --cpu-bind=verbose,mask_cpu:0x3,0x30000  osu_get_bw -m 1048576:1048576
+srun -n 2 --cpu-bind=mask_cpu:0x1,0x10000 osu_get_bw -m 1048576:1048576
 ```
 
-- Task 0 → CPU 0-1 (Numa node 0)  (Socket 0)  
-- Task 1 → CPU 16-17 (Numa node 1) (Socket 0)
+- Task 1 on : CPU(s) 16, Socket 0, NUMA node 1
+- Task 0 on : CPU(s) 0, Socket 0, NUMA node 0  
 
 ---
 
 ### 🔸 Case 3: Intra-node – Different Sockets
 
 ```bash
-srun -n 2 --cpu-bind=verbose,mask_cpu:0x3,0x30000000000000000 numactl --show
+srun -n 2 --cpu-bind=mask_cpu:0x1,0x10000000000000000 osu_get_latency -m 8192:8192 
 
-srun -n 2 --cpu-bind=verbose,mask_cpu:0x3,0x30000000000000000 ./2.Hardware-Detection.sh
-
-srun -n 2 --cpu-bind=verbose,mask_cpu:0x3,0x30000000000000000 osu_get_latency -m 8192:8192 
-
-srun -n 2 --cpu-bind=verbose,mask_cpu:0x3,0x30000000000000000 osu_get_bw -m 1048576:1048576
+srun -n 2 --cpu-bind=mask_cpu:0x1,0x10000000000000000 osu_get_bw -m 1048576:1048576
 ```
 
-- Task 0 → CPU 0-1 (Numa node 0)  (Socket 0)  
-- Task 1 → CPU 16-17 (Numa node 4) (Socket 1)
+- Task 0 on : CPU(s) 0, Socket 0, NUMA node 0
+- Task 1 on : CPU(s) 64, Socket 1, NUMA node 4
 
 ---
 
@@ -100,11 +78,10 @@ srun -n 2 --cpu-bind=verbose,mask_cpu:0x3,0x30000000000000000 osu_get_bw -m 1048
 ```bash
 salloc -N 2 --exclusive
 
-module load tools/numactl/2.0.16-GCCcore-13.2.0
+srun -n 2 -c 1 --cpu-bind=cores osu_get_latency -m 8192:8192
 
-srun -n 2 -c 2 --cpu-bind=verbose,cores numactl --show
+srun -n 2 -c 1 --cpu-bind=cores osu_get_bw -m 1048576:1048576
 
-srun -n 2 -c 2 --cpu-bind=verbose,cores ./2.Hardware-Detection.sh
 ```
 
 - Each task runs on a different node with 2 cpu cores per task. 
@@ -113,66 +90,6 @@ srun -n 2 -c 2 --cpu-bind=verbose,cores ./2.Hardware-Detection.sh
 ---
 
 
-### This is just a simple scripts that i used for osu_benchmarks test locally. 
-
-
-## Scripts for the test in locally 
-
-- After installation of osu benchmarks i tried such way. 
- 
-```bash
-#!/bin/bash
-
-OUTPUT_FILE="osu_intranode_results.txt"
-HARDWARE_DETECTION_SCRIPT="/home/users/mhassan/hpc-project/scripts/2.Hardware-Detection.sh"
-
-# CPU masksbit for different placement 
-declare -A CPU_MASKS=(
-    [same_numa]="0x3,0xc"
-    [diff_numa_same_socket]="0x3,0x30000"
-    [diff_socket_same_node]="0x3,0x30000000000000000"
-)
-
-BENCHMARKS=("osu_get_latency" "osu_get_bw")
-
-echo "==== OSU Intra-Node Placement Test Results ====" | tee "$OUTPUT_FILE"
-echo "Node: $(hostname)" | tee -a "$OUTPUT_FILE"
-echo "" | tee -a "$OUTPUT_FILE"
-
-find_binary_in_path() {
-    local binary_name=$1
-    which "$binary_name" 2>/dev/null
-}
-
-# Run  benchmarks
-for placement in "${!CPU_MASKS[@]}"; do
-    mask="${CPU_MASKS[$placement]}"
-    
-    echo "---- Placement: $placement ----" | tee -a "$OUTPUT_FILE"
-    
-    echo "Hardware topology for $placement" | tee -a "$OUTPUT_FILE"
-    echo "----------------------------------------------------" | tee -a "$OUTPUT_FILE"
-    srun -n 2 --cpu-bind=verbose,mask_cpu:$mask numactl --show | tee -a "$OUTPUT_FILE"
-    echo "" | tee -a "$OUTPUT_FILE"
-    
-    for bench in "${BENCHMARKS[@]}"; do
-        bench_path=$(find_binary_in_path "$bench")
-        
-        if [[ -z "$bench_path" || ! -x "$bench_path" ]]; then
-            echo "Benchmark not found: $bench" | tee -a "$OUTPUT_FILE"
-            continue
-        fi
-        
-        echo "Running $bench from $bench_path ..." | tee -a "$OUTPUT_FILE"
-        srun -n 2 --cpu-bind=verbose,mask_cpu:$mask "$bench_path" | tee -a "$OUTPUT_FILE"
-        echo "" | tee -a "$OUTPUT_FILE"
-    done
-    echo "" | tee -a "$OUTPUT_FILE"
-done
-
-echo "==== Test Complete ====" | tee -a "$OUTPUT_FILE"
-
-```
 ------------------------
 
 
@@ -185,10 +102,27 @@ echo "==== Test Complete ====" | tee -a "$OUTPUT_FILE"
 - now i'm trying to fix these senario with reframe. 
 
 
-#### Specially the bandwith  values are varies a lot. In each test i got different values ranging a  lot. and latency almost stable for each case except test in different node. 
+
+## Placement Test Summary locally without reframe
+
+| #  | Binary Source | Placement Type         | Latency     | Bandwidth       |
+|----|---------------|------------------------|-------------|-----------------|
+|  1 | local         | same_numa              | 0.18 us     | 8558.50 MB/s    |
+|  2 | local         | diff_numa_same_socket  | 0.18 us     | 9087.26 MB/s    |
+|  3 | local         | diff_socket_same_node  | 0.18 us     | 7253.66 MB/s    |
+|  4 | local         | diff_node              | 7.00 us     | 2177.70 MB/s    |
+|  5 | eessi         | same_numa              | 0.17 us     | 8932.59 MB/s    |
+|  6 | eessi         | diff_numa_same_socket  | 0.17 us     | 9848.59 MB/s    |
+|  7 | eessi         | diff_socket_same_node  | 0.18 us     | 8213.32 MB/s    |
+|  8 | eessi         | diff_node              | 6.96 us     | 2162.74 MB/s    |
+|  9 | easybuild     | same_numa              | 0.21 us     | 8549.71 MB/s    |
+| 10 | easybuild     | diff_numa_same_socket  | 0.21 us     | 9086.18 MB/s    |
+| 11 | easybuild     | diff_socket_same_node  | 0.22 us     | 7123.24 MB/s    |
+| 12 | easybuild     | diff_node              | 3.79 us     | 12335.86 MB/s   |
 
 
-## OSU Placement Test Summary
+---
+## OSU Placement Test Summary for reframe 
 
 After setting reference values for bandwidth and latency, I ran 24 tests across different placement scenarios. Though two placement scenarios are not place correctly `diff_numa_same_socket`, `diff_socket_same_node`.I'm trying to fix them. 
 
@@ -198,7 +132,9 @@ Out of 24 tests:
 
 Below is a detailed breakdown:
 
-| #  | Binary Source | Test Type | Placement Type         | Status | Value        | Target      |
+Below is a detailed breakdown: Reframe  
+
+| #  | Binary Source | Test Type | Placement Type         | Value        | Target      | Expected | 
 |----|---------------|-----------|-------------------------|--------|--------------|-------------|
 |  1 | local         | bandwidth | same_numa               | FAIL   | 6291.89 MB/s | 8200 MB/s   |
 |  2 | local         | bandwidth | diff_numa_same_socket   | FAIL   | 5695.74 MB/s | 8000 MB/s   |
@@ -224,7 +160,3 @@ Below is a detailed breakdown:
 | 22 | easybuild     | latency   | diff_numa_same_socket   | OK     | 0.21 us      | 0.21 us     |
 | 23 | easybuild     | latency   | diff_socket_same_node   | OK     | 0.2 us       | 0.21 us     |
 | 24 | easybuild     | latency   | diff_node               | OK     | 3.81 us      | 4.0 us      |
-
----
-
-

@@ -1,56 +1,521 @@
 ---
-title: HPC Project
-subtitle: High Performance Computing
-author: Jahid, Bingyu
+title: "MPI Communication Pattern Testing"
+subtitle: "Benchmarking Network Performance in HPC Environments"
+author: "Jahid & Bingyu"
+date: "`r Sys.Date()`"
 output: 
   xaringan::moon_reader:
     self_contained: true
-    css: [default, uchicago_pol_meth.css]
+    css: [default, uchicago.css]
     nature:
       highlightLines: true
       ratio: '16:9'
 ---
 
-title: "HPC Project"
-subtitle: "High Performance Computing"
- author: "Jahid, Bingyu"
+# Outline
+
+- .maroon[Introduction]
+
+- .maroon[Installation Methods]
+
+- .maroon[Topology Analysis]
+
+- .maroon[Manual Testing Approach]
+
+- .maroon[Reframe Framework]
+
+- .maroon[Performance Analysis]
+
+---
+
+# Introduction
+
+## Background: Why Testing Matters
+
+- Why we need to test MPI communication patterns?
+  - Performance bottlenecks in HPC often occur in communication pathways
+  - Different network topologies significantly impact application efficiency
+  - System-specific optimization requires accurate performance benchmarking
   
+- OSU Micro-Benchmarks (OMB)
+  - Industry-standard suite for measuring MPI performance
+  - Focuses on point-to-point communication patterns
+  - Provides a baseline for evaluating network performance
+---
+
+## Testing Methodologies
+
+- How to test?
+  - Systematic benchmarking using SLURM job scheduler
+    - Configure process placement with precise CPU binding
+    - Control for system variables (network load, memory access)
+  
+  - Automated testing using ReFrame framework
+    - Standardized test execution
+    - Reproducible performance measurements
+    - Cross-platform comparison capabilities
+---
+
+## Key Metrics
+
+- What to test?
+  - Bandwidth: Maximum data transfer rate (GB/s)
+    Think of bandwidth as the width of a highway:
+      - **Higher bandwidth** = wider highway that allows more data to flow simultaneously
+      - **Impact**: Critical for transferring large chunks of data (like large files or datasets)
+      - **Example**: When transferring a 10GB file, higher bandwidth (10GB/s vs 1GB/s) makes a dramatic difference
+
+  - Latency: Time delay in message delivery (μs)
+    Think of latency as the travel time:
+      - **Lower latency** = faster response time
+      - **Impact**: Critical for applications requiring rapid back-and-forth communication
+      - **Example**: In high-frequency trading or online gaming, even microseconds of delay can be significant
+
+---
+
+class: title-slide
+
+# Installation Methods
+
+---
+
+# Installation Methods
+
+- Local Installation
+  - Custom compilation with specific optimizations
+  - Direct system integration
+  - Challenges: Dependency management, portability issues
+
+--
+
+- EESSI (European Environment for Scientific Software Installations)
+  - Compatibility layer across diverse HPC systems
+  - Pre-optimized scientific software stack
+  - Container-based deployment model
+
+--
+
+- EASYBUILD
+  - Automated build and installation framework
+  - Module-based software management
+  - Comprehensive dependency resolution
+
+
+---
+
+class: title-slide
+
+# Topology Analysis
+
+---
+
+# CPU Architecture Comparison
+
+- `lscpu -l` 
+  - Provides detailed CPU topology information
+  - Displays NUMA node structure, core counts, and cache hierarchy
+--
+
+.left[<img src="imgs/cpu_aion.jpeg" alt ="CPU info on AION", height="500px">]
+
+.right[<img src="imgs/cpu_iris.jpeg" alt ="CPU info on IRIS", height="500px">]
+
+---
+
+# Topology Information
+- `lstopo` 
+  - Visualizes system topology
+  - Displays NUMA nodes, CPU cores, and memory hierarchy
+  - Useful for understanding interconnects and memory access patterns
+
+--
+.left[<img src="imgs/topo_aion.jpeg" alt ="Topology info on AION", height="500px">]
+
+.right[<img src="imgs/topo_iris.jpeg" alt ="Topology info on IRIS", height="500px">]
+
+---
+# Architecture Analysis
+
+- Physical Node
+  - A complete physical server or computer system
+  - Examples:
+    - **AION**: A server with 2 AMD EPYC 7742 processors (128 cores total)
+    - **IRIS**: A server with 2 Intel Xeon Gold 6148 processors (40 cores total)
+
+--
+
+- Socket
+  - A physical connector on the motherboard that houses a CPU
+  - Both example servers are dual-socket systems (contain 2 physical CPUs)
+  - Each socket contains one multi-core processor chip
+--
+
+- NUMA Node
+  - NUMA = Non-Uniform Memory Access
+  - A processing unit with its own dedicated local memory
+  - In most cases, each socket/processor forms one NUMA node
+  - Memory access is faster within the same NUMA node than across nodes
+
+--
+
+- Core
+  - An independent processing unit within a CPU
+  - Can execute program instructions independently
+  - Modern processors contain multiple cores for parallel processing
+  - In the examples: AMD EPYC has 64 cores per processor, Intel Xeon has 20
+
+---
+
+class: title-slide
+
+# Manual Testing Approach
+
+---
+
+## SLURM Configuration Options
+
+- `-n`: Number of processes to run
+  - Controls MPI task count
+
+--
+
+- `-N`: Number of nodes to allocate
+  - Determines inter-node vs intra-node communication patterns
+
+--
+
+- `-c`: CPU cores per task
+  - Affects process density and resource allocation
+
+--
+
+- `--cpu_bind`: Process binding strategy
+  - `mask_cpu`: Explicit CPU mask for precise process placement
+  - Critical for controlling NUMA and socket-level process distribution
+
+--
+
+- `numactl`: NUMA control utility
+  - Memory and CPU affinity management
+  - Complements SLURM's placement capabilities
+
+---
+# Test Case 1: Same NUMA Node
+
+- Communication within single NUMA domain
+- Lowest expected latency, highest bandwidth
+
+```{bash, echo=TRUE, eval=FALSE}
+srun 
+```
+
+.center[<img src="imgs/same_numa_manually_verification.jpeg" alt ="Case 1: Same NUMA", height="500px">]
+
+---
+# Test Case 2: Cross-NUMA, Same Socket
+
+- Communication across NUMA boundaries
+- Memory controller traversal overhead
+```{bash, echo=TRUE, eval=FALSE}
+srun 
+```
+
+.center[<img src="imgs/diff_numa_manually_verification.jpeg" alt ="Case 2: Different NUMA", height="500px">]
+
+---
+
+# Test Case 3: Cross-Socket
+
+- Communication between CPU sockets
+- Higher latency due to QPI/UPI interconnect
+```{bash, echo=TRUE, eval=FALSE}
+srun 
+```
+
+.center[<img src="imgs/diff_socket_manually_verification.jpeg" alt ="Case 3: Different Socket", height="500px">]
+
+---
+
+# Test Case 4: Cross-Node
+
+- Network-based communication
+- Highest latency, potential bandwidth limitations
+```{bash, echo=TRUE, eval=FALSE}
+srun 
+```
+
+.center[<img src="imgs/diff_node_manually_verification.jpeg" alt ="Case 4: Different Node", height="500px">]
+
+---
+
+
+class: title-slide
+
+# ReFrame Framework
+
+---
+
+# ReFrame Implementation
+
+- `ReFrame` is a framework for systematic performance testing and benchmarking
+  - Python-based test definition
+  - Automated execution across multiple systems
+
+--
+
+- Key Configuration Parameters
+  These define the fundamental scale and structure of your computation:
+  - `self.num_tasks`: Specifies how many individual computational tasks will be executed
+  - `self.num_nodes`: Defines the number of physical or virtual compute nodes to allocate
+
+- Job Configuration
+  These parameters establish resource boundaries for job execution:
+  - `job.options` encompasses various resource specifications
+  - Controls critical limits like memory allocation, maximum runtime, and process count
+  - Essentially defines "what resources each job needs"
+
+- Launch Parameters
+  These control the specific execution behavior:
+  - `job_launcher.options` manages how processes actually run
+  - Process pinning (controls which CPU cores execute which processes)
+  - MPI launcher options (controls how Message Passing Interface handles communication)
+  - Focuses on "how the job runs" rather than what resources it needs
+
+---
+## `numactl` Binding Variables
+```{python, echo=TRUE, eval=FALSE}
+#!/bin/bash
+export NUMA_COUNT=8
+export SOCKET_COUNT=2
+export NUMA_SAME=0
+export NUMA_DIFF_SAME_SOCKET_1=0
+export NUMA_DIFF_SAME_SOCKET_2=1
+export NUMA_DIFF_SOCKET_1=0
+export NUMA_DIFF_SOCKET_2=4
+
+# Socket to NUMA node mapping
+declare -A SOCKET_NUMA_MAP
+SOCKET_NUMA_MAP[0]="0 1 2 3"
+SOCKET_NUMA_MAP[1]="4 5 6 7"
+
+# NUMA node to CPU mapping
+declare -A NUMA_CPUS_MAP
+NUMA_CPUS_MAP[0]="0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15"
+NUMA_CPUS_MAP[1]="16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31"
+NUMA_CPUS_MAP[2]="32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47"
+NUMA_CPUS_MAP[3]="48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63"
+NUMA_CPUS_MAP[4]="64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79"
+NUMA_CPUS_MAP[5]="80 81 82 83 84 85 86 87 88 89 90 91 92 93 94 95"
+NUMA_CPUS_MAP[6]="96 97 98 99 100 101 102 103 104 105 106 107 108 109 110 111"
+NUMA_CPUS_MAP[7]="112 113 114 115 116 117 118 119 120 121 122 123 124 125 126 127"
+```
+---
+
+# Test Case 1: Same NUMA with ReFrame
+
+- Automated process binding to same NUMA domain
+- Consistent test execution
+```{python, echo=TRUE, eval=FALSE}
+self.num_nodes           = 1               
+self.num_tasks_per_socket= 2          
+self.num_tasks_per_node  = 2   
+self.num_tasks = 2
+self.num_cpus_per_task = 1   
+
+SRUN_OPTIONS = '-N 1 -c 1 -n 2 --ntasks-per-socket 2 \
+    --distribution=block:block:block'
+
+self.job.launcher.options = [    
+    SRUN_OPTIONS,           
+    './bind_same_numa.sh'
+] 
+```
+
+---
+
+# Test Case 1: Same NUMA with ReFrame
+```{bash, echo=TRUE, eval=FALSE}
+#!/bin/bash
+# Bind both processes to the same NUMA node
+source $(dirname $0)/binding_vars.sh
+
+# Use the same NUMA for both processes
+BINDING_NODE=$NUMA_SAME
+
+echo "Binding all processes to NUMA node $BINDING_NODE"
+numactl --cpunodebind=$BINDING_NODE --membind=$BINDING_NODE "$@"    
+```
+
+---
+
+# Test Case 1: Same NUMA with ReFrame
+
+.center[<img src="imgs/same_numa_reframe_verification.jpeg" alt ="Case 1: Same NUMA with Reframe", height="500px">]
+
+---
+# Test Case 2: Cross-NUMA with ReFrame
+
+- Programmatic NUMA boundary traversal
+- Systematic performance measurement
+
+```{python, echo=TRUE, eval=FALSE}
+self.num_nodes           = 1               
+self.num_tasks_per_socket= 2          
+self.num_tasks_per_node  = 2   
+self.num_tasks = 2
+self.num_cpus_per_task = 1   
+
+SRUN_OPTIONS = '-N 1 -c 1 -n 2 --ntasks-per-socket 2 \
+    --distribution=block:block:block'
+
+self.job.launcher.options = [    
+    SRUN_OPTIONS,           
+    './bind_diff_numa_same_socket.sh'
+] 
+```
+
+---
+
+# Test Case 2: Cross-NUMA with ReFrame
+
+```{bash, echo=TRUE, eval=FALSE}
+#!/bin/bash
+# Bind processes to different NUMA nodes on the same socket
+source $(dirname $0)/binding_vars.sh
+
+# Apply binding based on task ID
+if [ "$SLURM_PROCID" = "0" ]; then
+    echo "Task 0: Binding to NUMA node $NUMA_DIFF_SAME_SOCKET_1"
+    numactl --cpunodebind=$NUMA_DIFF_SAME_SOCKET_1 --membind=$NUMA_DIFF_SAME_SOCKET_1 "$@"
+else
+    echo "Task 1: Binding to NUMA node $NUMA_DIFF_SAME_SOCKET_2"
+    numactl --cpunodebind=$NUMA_DIFF_SAME_SOCKET_2 --membind=$NUMA_DIFF_SAME_SOCKET_2 "$@"
+fi      
+```
+
+---
+
+# Test Case 2: Cross-NUMA with ReFrame
+
+.center[<img src="imgs/diff_numa_reframe_verification.jpeg" alt ="Case 2: Different NUMA with Reframe", height="500px">]
+
+---
+
+# Test Case 3: Cross-Socket with ReFrame
+
+- Automated socket-level process distribution
+- Reproducible cross-socket communication testing
+
+```{python, echo=TRUE, eval=FALSE}
+self.num_nodes           = 1               
+self.num_tasks_per_socket= 2          
+self.num_tasks_per_node  = 2   
+self.num_tasks = 2
+self.num_cpus_per_task = 1   
+
+SRUN_OPTIONS = '-N 1 -c 1 -n 2 --ntasks-per-socket 2 \
+    --distribution=block:block:block'
+
+self.job.launcher.options = [    
+    SRUN_OPTIONS,           
+    './bind_same_numa.sh'
+] 
+```
+
+---
+
+# Test Case 3: Cross-Socket with ReFrame
+```{bash, echo=TRUE, eval=FALSE}
+#!/bin/bash
+# Bind processes to different sockets
+source $(dirname $0)/binding_vars.sh
+
+# Apply binding based on task ID
+if [ "$SLURM_PROCID" = "0" ]; then
+    echo "Task 0: Binding to NUMA node $NUMA_DIFF_SOCKET_1"
+    numactl --cpunodebind=$NUMA_DIFF_SOCKET_1 --membind=$NUMA_DIFF_SOCKET_1 "$@"
+else
+    echo "Task 1: Binding to NUMA node $NUMA_DIFF_SOCKET_2"
+    numactl --cpunodebind=$NUMA_DIFF_SOCKET_2 --membind=$NUMA_DIFF_SOCKET_2 "$@"
+fi            
+```
+
+---
+
+# Test Case 3: Cross-Socket with ReFrame
+.center[<img src="imgs/diff_socket_reframe_verification.jpeg" alt ="Case 3: Different Socket with Reframe", height="500px">]
+
+---
+
+# Test Case 4: Cross-Node with ReFrame
+
+- Multi-node test orchestration
+- Network topology awareness
+
+```{python, echo=TRUE, eval=FALSE}
+self.num_nodes = 2
+self.num_tasks_per_node = 1
+            
+self.job.launcher.options = [
+    '--distribution=cyclic',
+]
+```
+
+.center[<img src="imgs/diff_node_reframe_verification.jpeg" alt ="Case 4: Different Node with Reframe", height="500px">]
+
+---
+
+
+class: title-slide
+
+# Performance Analysis
+
+---
+# Bandwidth Comparison - Manual Testing
+
+.center[<img src="imgs/Bandwidth_Manually.jpeg" alt ="Comparison of Bandwidth for different installation by Manually testing", height="500px">]
+
+---
+# Latency Comparison - Manual Testing
+
+.center[<img src="imgs/Latency_Manually.jpeg" alt ="Comparison of Latency for different installation by Manually testing", height="500px">]
+
+---
+
+# Bandwidth Comparison - ReFrame
+
+.center[<img src="imgs/Bandwidth_Manually.jpeg" alt ="Comparison of Bandwidth for different installation by Reframe", height="500px">]
+
+---
+# Latency Comparison - ReFrame
+
+.center[<img src="imgs/Latency_Reframe.jpeg" alt ="Comparison of Latency for different installation by Reframe", height="500px">]
+
+---
+
+# Conclusions
+
+- Communication performance strongly correlates with hardware topology
+  - Same-NUMA communication outperforms all other configurations
+  - Cross-node communication shows highest latency penalties
+
+- Installation method impacts achievable performance
+  - Custom-compiled implementations show marginal advantages
+  - EESSI provides good balance of performance and portability
+
+- ReFrame provides consistent, reproducible testing methodology
+  - Results align with manual testing approaches
+  - Enables systematic performance regression testing
+
+- Recommendations:
+  - Optimize MPI applications for NUMA-aware process placement
+  - Consider communication patterns when designing parallel algorithms
+
 ---
 class: title-slide
 
-# Welcome!
-$$
-  \require{cancel}
-$$
----
-
-For using R Markdown to create slides, we need to install the following packages:
-```{r, eval=FALSE}
-install.packages("xaringan")
-install.packages("rmarkdown")
-install.packages("tinytex")
-```
-
+# Thank you!
+## Questions?
 
 ---
-Outline
-- Introduction
-- Installation
-- Topology
-  - Pysical node, Sockets, NUMAs, Cores
-  - Threads, Hyperthreading
-  - Memory
-  - Cache
-- Benchmarking
-  - measuement
-    - Bandwidth
-    - Latency
-  - srun
-    - parameters 
-- Reframe
-  - parameters: self, job.options, job_launch.options
-  - sbatch
-- Performance
-- Conclusion
 
----
