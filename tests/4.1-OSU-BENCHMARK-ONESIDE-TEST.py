@@ -163,6 +163,9 @@ class OSUPlacementTest(OSUMicroBenchmarkBase):
         
         source_script = os.path.expanduser('~/hpc-project/scripts/2.Hardware-Detection.sh')    
 
+        """
+        srun -N1 -n2 -c1 --ntasks-per-socket 1  --distribution=block:cyclic bash -c 'CPU=$(taskset -cp $$ | grep -o "[0-9]*$"); TOPOLOGY=$(lscpu -p=cpu,socket,node | grep "^$CPU,"); SOCKET=$(echo $TOPOLOGY | cut -d, -f2); NUMA=$(echo $TOPOLOGY | cut -d, -f3); echo "Task $SLURM_PROCID: CPU $CPU, Socket $SOCKET, NUMA node $NUMA"'
+        """
         self.prerun_cmds.extend([
             '# Create private copies of hardware detection script in stage directory',
             f'cp {source_script} ./hw-detect.sh',
@@ -185,18 +188,9 @@ class OSUPlacementTest(OSUMicroBenchmarkBase):
             
             SRUN_OPTIONS = '-N 1 -c 1 -n 2 --ntasks-per-socket 2 \
                 --distribution=block:block:block'
-            
-            self.prerun_cmds.extend([f"""
-                srun {SRUN_OPTIONS}  bash -c 'CPU=$(taskset -cp $$ | grep -o "[0-9]*$"); 
-                TOPOLOGY=$(lscpu -p=cpu,socket,node | grep "^$CPU,"); 
-                SOCKET=$(echo $TOPOLOGY | cut -d, -f2); 
-                NUMA=$(echo $TOPOLOGY | cut -d, -f3); 
-                echo "Task $SLURM_PROCID: CPU $CPU, Socket $SOCKET, NUMA node $NUMA"'
-            """])
                 
             self.job.launcher.options = [    
-                SRUN_OPTIONS,                
-                '--cpu-bind=verbose',
+                SRUN_OPTIONS,           
                 './bind_same_numa.sh'
             ]
             
@@ -208,43 +202,23 @@ class OSUPlacementTest(OSUMicroBenchmarkBase):
             SRUN_OPTIONS = '-N1 -n2 -c1 --ntasks-per-socket 1 \
                 --distribution=cyclic'
             
-            self.prerun_cmds.extend([f"""
-                srun {SRUN_OPTIONS}  bash -c 'CPU=$(taskset -cp $$ | grep -o "[0-9]*$"); 
-                TOPOLOGY=$(lscpu -p=cpu,socket,node | grep "^$CPU,"); 
-                SOCKET=$(echo $TOPOLOGY | cut -d, -f2); 
-                NUMA=$(echo $TOPOLOGY | cut -d, -f3); 
-                echo "Task $SLURM_PROCID: CPU $CPU, Socket $SOCKET, NUMA node $NUMA"'
-            """])
-            
             self.job.launcher.options = [    
-                SRUN_OPTIONS,                                         
-                '--cpu-bind=verbose',
+                SRUN_OPTIONS,           
                 './bind_diff_numa_same_socket.sh'
             ]        
     
         elif self.placement_type == 'diff_socket_same_node':          
-            self.num_nodes           = 2               
+            self.num_nodes           = 1           
             self.num_tasks_per_socket= 1
-            self.num_tasks           = 5          
-            self.num_tasks_per_node  = 5
+            self.num_tasks           = 5 if self.current_system.name == 'aion' else 2        
+            self.num_tasks_per_node  = 5 if self.current_system.name == 'aion' else 2
             
-            # self.job.options = [
-            #     '--sockets-per-node=2',  # Request 2 sockets
-            # ]
-            
+            # self.job.options = ['--sockets-per-node=5']
+             
             SRUN_OPTIONS = '-N1 -n2 -c 1 --ntasks-per-socket 1'
-            
-            self.prerun_cmds.extend([f"""
-                srun {SRUN_OPTIONS}  bash -c 'CPU=$(taskset -cp $$ | grep -o "[0-9]*$"); 
-                TOPOLOGY=$(lscpu -p=cpu,socket,node | grep "^$CPU,"); 
-                SOCKET=$(echo $TOPOLOGY | cut -d, -f2); 
-                NUMA=$(echo $TOPOLOGY | cut -d, -f3); 
-                echo "Task $SLURM_PROCID: CPU $CPU, Socket $SOCKET, NUMA node $NUMA"'
-            """])
-                    
+                                
             self.job.launcher.options = [    
                 SRUN_OPTIONS,
-                '--cpu-bind=verbose',
                 './bind_diff_socket.sh'
             ]
 
@@ -254,17 +228,9 @@ class OSUPlacementTest(OSUMicroBenchmarkBase):
                         
             self.job.launcher.options = [
                 '--distribution=cyclic',
-                '--cpu-bind=verbose',
+                # '--cpu-bind=verbose',
             ]
-     
-        # Add comprehensive verification commands BEFORE running benchmark
-        self.prerun_cmds.extend([
-            'echo "==== SLURM Resource Allocation Details ===="',
-            'env | grep SLURM',
-            'echo "==== Process Binding Verification (will run before benchmark) ===="',
-            'srun -n2 bash -c \'echo "TASK $SLURM_PROCID on $(hostname): CPU mask $(taskset -p $$)"\''
-        ])
-        
+             
         # Add detailed verification AFTER running benchmark
         self.postrun_cmds = [
             'echo "==== Detailed Process Placement Verification (after benchmark) ===="',

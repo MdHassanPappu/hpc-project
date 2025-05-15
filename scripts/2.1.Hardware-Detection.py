@@ -180,7 +180,7 @@ def generate_placement_scripts(scripts_dir=None, topology_data=None):
             BINDING_NODE=$NUMA_SAME
 
             echo "Binding all processes to NUMA node $BINDING_NODE"
-            numactl --cpunodebind=$BINDING_NODE --membind=$BINDING_NODE "$@"
+            numactl --cpunodebind=$BINDING_NODE "$@"
         """)
 
     with open(f"{scripts_dir}/bind_diff_numa_same_socket.sh", "w") as f:
@@ -191,10 +191,10 @@ def generate_placement_scripts(scripts_dir=None, topology_data=None):
             # Apply binding based on task ID
             if [ "$SLURM_PROCID" = "0" ]; then
                 echo "Task 0: Binding to NUMA node $NUMA_DIFF_SAME_SOCKET_1"
-                numactl --cpunodebind=$NUMA_DIFF_SAME_SOCKET_1 --membind=$NUMA_DIFF_SAME_SOCKET_1 "$@"
+                numactl --cpunodebind=$NUMA_DIFF_SAME_SOCKET_1 "$@"
             else
                 echo "Task 1: Binding to NUMA node $NUMA_DIFF_SAME_SOCKET_2"
-                numactl --cpunodebind=$NUMA_DIFF_SAME_SOCKET_2 --membind=$NUMA_DIFF_SAME_SOCKET_2 "$@"
+                numactl --cpunodebind=$NUMA_DIFF_SAME_SOCKET_2 "$@"
             fi
         """)
 
@@ -206,10 +206,10 @@ def generate_placement_scripts(scripts_dir=None, topology_data=None):
             # Apply binding based on task ID
             if [ "$SLURM_PROCID" = "0" ]; then
                 echo "Task 0: Binding to NUMA node $NUMA_DIFF_SOCKET_1"
-                numactl --cpunodebind=$NUMA_DIFF_SOCKET_1 --membind=$NUMA_DIFF_SOCKET_1 "$@"
+                numactl --cpunodebind=$NUMA_DIFF_SOCKET_1 "$@"
             else
                 echo "Task 1: Binding to NUMA node $NUMA_DIFF_SOCKET_2"
-                numactl --cpunodebind=$NUMA_DIFF_SOCKET_2 --membind=$NUMA_DIFF_SOCKET_2 "$@"
+                numactl --cpunodebind=$NUMA_DIFF_SOCKET_2 "$@"
             fi
         """)
 
