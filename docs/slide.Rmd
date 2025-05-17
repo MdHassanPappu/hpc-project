@@ -12,7 +12,7 @@ output:
       ratio: '16:9'
 ---
 
-# Outline
+# Outline.
 
 - .maroon[Introduction]
 
@@ -204,11 +204,21 @@ class: title-slide
 
 - Communication within single NUMA domain
 - Lowest expected latency, highest bandwidth
+  
+#### **What is a Bit Mask?**
 
+A **bit mask** is a binary pattern used to specify a set of CPUs for binding.  
+- `1` means the CPU is included  
+- `0` means the CPU is excluded 
+-  the mask `0x2` (binary `10`) selects CPUs 1.
+  
 ```{bash, echo=TRUE, eval=FALSE}
-srun 
+srun srun -N 1 -n 2 --cpu-bind=mask_cpu:0x1,0x10  osu_get_latency
 ```
 
+- Task 0 on : CPU(s) 0, Socket 0, NUMA node 0
+- Task 1 on : CPU(s) 4, Socket 0, NUMA node 0
+  
 .center[<img src="imgs/same_numa_manually_verification.jpeg" alt ="Case 1: Same NUMA", height="500px">]
 
 ---
@@ -216,9 +226,13 @@ srun
 
 - Communication across NUMA boundaries
 - Memory controller traversal overhead
+   
 ```{bash, echo=TRUE, eval=FALSE}
-srun 
+srun srun -N 1 -n 2 --cpu-bind=mask_cpu:0x1,0x10000  osu_get_latency
 ```
+
+- Task 1 on : CPU(s) 16, Socket 0, NUMA node 1
+- Task 0 on : CPU(s) 0, Socket 0, NUMA node 0
 
 .center[<img src="imgs/diff_numa_manually_verification.jpeg" alt ="Case 2: Different NUMA", height="500px">]
 
@@ -228,10 +242,12 @@ srun
 
 - Communication between CPU sockets
 - Higher latency due to QPI/UPI interconnect
+  
 ```{bash, echo=TRUE, eval=FALSE}
-srun 
+srun -N 1 -n 2 --cpu-bind=mask_cpu:0x1,0x10000000000000000 osu_get_latency
 ```
-
+- Task 0 on : CPU(s) 0, Socket 0, NUMA node 0
+- Task 1 on : CPU(s) 64, Socket 1, NUMA node 4
 .center[<img src="imgs/diff_socket_manually_verification.jpeg" alt ="Case 3: Different Socket", height="500px">]
 
 ---
@@ -240,10 +256,14 @@ srun
 
 - Network-based communication
 - Highest latency, potential bandwidth limitations
+
 ```{bash, echo=TRUE, eval=FALSE}
-srun 
+srun -N 2 -n 2 -c 1 --cpu-bind=cores osu_get_latency
 ```
 
+- Task 1 on Node **cluster - ## :** CPU(s) 0, Socket 0, NUMA node 0
+- Task 0 on Node **cluster - @@ :** CPU(s) 0, Socket 0, NUMA node 0
+  
 .center[<img src="imgs/diff_node_manually_verification.jpeg" alt ="Case 4: Different Node", height="500px">]
 
 ---
