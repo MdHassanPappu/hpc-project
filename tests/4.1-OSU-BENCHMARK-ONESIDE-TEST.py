@@ -158,9 +158,7 @@ class OSUPlacementTest(OSUMicroBenchmarkBase):
     @run_before('run')
     def set_job_options_for_placement(self):
         """Configure Slurm distribution options for different placement strategies"""
-        self.num_tasks = 2
-        self.num_cpus_per_task = 1
-        
+                
         source_script = os.path.expanduser('~/hpc-project/scripts/2.Hardware-Detection.sh')    
 
         """
@@ -185,6 +183,8 @@ class OSUPlacementTest(OSUMicroBenchmarkBase):
             self.num_nodes           = 1               
             self.num_tasks_per_socket= 2          
             self.num_tasks_per_node  = 2      
+            self.num_tasks           = 2
+            self.num_cpus_per_task   = 1
             
             SRUN_OPTIONS = '-N 1 -c 1 -n 2 --ntasks-per-socket 2 \
                 --distribution=block:block:block'
@@ -197,7 +197,9 @@ class OSUPlacementTest(OSUMicroBenchmarkBase):
         elif self.placement_type == 'diff_numa_same_socket':  
             self.num_nodes           = 1               
             self.num_tasks_per_socket= 1          
-            self.num_tasks_per_node  = 2
+            self.num_tasks_per_node  = 2                 
+            self.num_tasks           = 2
+            self.num_cpus_per_task   = 1
             
             SRUN_OPTIONS = '-N1 -n2 -c1 --ntasks-per-socket 1 \
                 --distribution=cyclic'
@@ -208,14 +210,10 @@ class OSUPlacementTest(OSUMicroBenchmarkBase):
             ]        
     
         elif self.placement_type == 'diff_socket_same_node':          
-            self.num_nodes           = 1           
-            self.num_tasks_per_socket= 1
-            self.num_tasks           = 5 if self.current_system.name == 'aion' else 2        
-            self.num_tasks_per_node  = 5 if self.current_system.name == 'aion' else 2
             
-            # self.job.options = ['--sockets-per-node=5']
-             
-            SRUN_OPTIONS = '-N1 -n2 -c 1 --ntasks-per-socket 1'
+            self.job.options = ['-N 1 -n 2 --exclusive']
+                            
+            SRUN_OPTIONS = '-N1 -n2 --ntasks-per-socket 1'
                                 
             self.job.launcher.options = [    
                 SRUN_OPTIONS,
@@ -223,12 +221,13 @@ class OSUPlacementTest(OSUMicroBenchmarkBase):
             ]
 
         elif self.placement_type == 'diff_node':
-            self.num_nodes = 2
-            self.num_tasks_per_node = 1
+            self.num_nodes           = 2
+            self.num_tasks_per_node  = 1     
+            self.num_tasks           = 2
+            self.num_cpus_per_task   = 1
                         
             self.job.launcher.options = [
                 '--distribution=cyclic',
-                # '--cpu-bind=verbose',
             ]
              
         # Add detailed verification AFTER running benchmark
