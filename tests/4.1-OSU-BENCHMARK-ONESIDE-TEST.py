@@ -161,9 +161,6 @@ class OSUPlacementTest(OSUMicroBenchmarkBase):
                 
         source_script = os.path.expanduser('~/hpc-project/scripts/2.Hardware-Detection.sh')    
 
-        """
-        srun -N1 -n2 -c1 --ntasks-per-socket 1  --distribution=block:cyclic bash -c 'CPU=$(taskset -cp $$ | grep -o "[0-9]*$"); TOPOLOGY=$(lscpu -p=cpu,socket,node | grep "^$CPU,"); SOCKET=$(echo $TOPOLOGY | cut -d, -f2); NUMA=$(echo $TOPOLOGY | cut -d, -f3); echo "Task $SLURM_PROCID: CPU $CPU, Socket $SOCKET, NUMA node $NUMA"'
-        """
         self.prerun_cmds.extend([
             '# Create private copies of hardware detection script in stage directory',
             f'cp {source_script} ./hw-detect.sh',
@@ -177,8 +174,7 @@ class OSUPlacementTest(OSUMicroBenchmarkBase):
             'chmod 755 ./bind_*.sh 2>/dev/null || echo "No binding scripts to chmod"'
         ])
         
-        coefficient = 8 if self.current_system.name == 'aion' else 4
-        
+        tmp_str = ''
         if self.placement_type == 'same_numa':            
             self.num_nodes           = 1               
             self.num_tasks_per_socket= 2          
@@ -194,20 +190,18 @@ class OSUPlacementTest(OSUMicroBenchmarkBase):
                 './bind_same_numa.sh'
             ]
             
-        elif self.placement_type == 'diff_numa_same_socket':  
-            self.num_nodes           = 1               
-            self.num_tasks_per_socket= 1          
-            self.num_tasks_per_node  = 2                 
-            self.num_tasks           = 2
-            self.num_cpus_per_task   = 1
+        elif self.placement_type == 'diff_numa_same_socket':                       
             
-            SRUN_OPTIONS = '-N1 -n2 -c1 --ntasks-per-socket 1 \
-                --distribution=cyclic'
+            self.job.options = ['-N 1 -n 2 --exclusive']
+            
+            SRUN_OPTIONS = '-N1 -n2 -c1 --distribution=cyclic'
             
             self.job.launcher.options = [    
                 SRUN_OPTIONS,           
                 './bind_diff_numa_same_socket.sh'
             ]        
+            
+            tmp_str = '--cpu-bind=verbose,map_cpu:0,16'
     
         elif self.placement_type == 'diff_socket_same_node':          
             
@@ -220,6 +214,8 @@ class OSUPlacementTest(OSUMicroBenchmarkBase):
                 './bind_diff_socket.sh'
             ]
 
+            tmp_str = '--cpu-bind=verbose,map_cpu:0,64'
+            
         elif self.placement_type == 'diff_node':
             self.num_nodes           = 2
             self.num_tasks_per_node  = 1     
@@ -233,7 +229,7 @@ class OSUPlacementTest(OSUMicroBenchmarkBase):
         # Add detailed verification AFTER running benchmark
         self.postrun_cmds = [
             'echo "==== Detailed Process Placement Verification (after benchmark) ===="',
-            'srun -n2 bash -c \'echo "TASK $SLURM_PROCID on $(hostname): CPU $(taskset -cp $$), NUMA node $(cat /proc/self/status | grep Mems_allowed_list | cut -f2), Socket $(lscpu -p=cpu,socket | grep "^$(taskset -cp $$ | grep -o "[0-9]*$")," | cut -d, -f2)"\'',
+            f'srun -n2 {tmp_str} bash -c \'echo "TASK $SLURM_PROCID on $(hostname): CPU $(taskset -cp $$), NUMA node $(cat /proc/self/status | grep Mems_allowed_list | cut -f2), Socket $(lscpu -p=cpu,socket | grep "^$(taskset -cp $$ | grep -o "[0-9]*$")," | cut -d, -f2)"\'',
             'echo "==== Verifying process placement ===="',
-            'srun -n2 ./hw-detect.sh --verify'
+            f'srun -n2 {tmp_str} ./hw-detect.sh --verify'
         ]

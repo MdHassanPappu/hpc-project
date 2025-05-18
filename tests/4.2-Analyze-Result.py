@@ -81,15 +81,14 @@ print(df['metric'].value_counts())
 plt.style.use('ggplot')
 sns.set_palette("Set2")
 plt.rcParams.update({'font.size': 12})
-
 # Define consistent order for placement types and binary sources
 placement_order = ['same_numa', 'diff_numa_same_socket', 'diff_socket_same_node', 'diff_node']
 binary_order = ['local', 'easybuild', 'eessi']
 placement_labels = {
     'same_numa': 'Same NUMA',
-    'diff_numa_same_socket': 'Different NUMA\nSame Socket',
-    'diff_socket_same_node': 'Different Socket\nSame Node',
-    'diff_node': 'Different Node'
+    'diff_numa_same_socket': 'Diff NUMA',
+    'diff_socket_same_node': 'Diff Socket',
+    'diff_node': 'Diff Node'
 }
 
 # Create 2x2 grid of plots - bandwidth and latency, for each cluster
@@ -107,6 +106,8 @@ if not bw_iris.empty:
     axs[0, 0].set_title('Bandwidth on Iris')
     axs[0, 0].set_ylabel('Bandwidth (MB/s)')
     axs[0, 0].set_ylim(bottom=0)
+    # Use the shorter labels from placement_labels
+    axs[0, 0].set_xticklabels([placement_labels[p] for p in pivot.index])
     
 # Plot bandwidth for aion (top-right)
 bw_aion = df[(df['cluster'] == 'aion') & (df['metric'] == 'bandwidth')].copy()
@@ -118,6 +119,8 @@ if not bw_aion.empty:
     axs[0, 1].set_title('Bandwidth on Aion')
     axs[0, 1].set_ylabel('Bandwidth (MB/s)')
     axs[0, 1].set_ylim(bottom=0)
+    # Use the shorter labels from placement_labels
+    axs[0, 1].set_xticklabels([placement_labels[p] for p in pivot.index])
 
 # Plot latency for iris (bottom-left)
 lat_iris = df[(df['cluster'] == 'iris') & (df['metric'] == 'latency')].copy()
@@ -129,6 +132,8 @@ if not lat_iris.empty:
     axs[1, 0].set_title('Latency on Iris')
     axs[1, 0].set_ylabel('Latency (μs)')
     axs[1, 0].set_ylim(bottom=0)
+    # Use the shorter labels from placement_labels
+    axs[1, 0].set_xticklabels([placement_labels[p] for p in pivot.index])
 
 # Plot latency for aion (bottom-right)
 lat_aion = df[(df['cluster'] == 'aion') & (df['metric'] == 'latency')].copy()
@@ -140,6 +145,8 @@ if not lat_aion.empty:
     axs[1, 1].set_title('Latency on Aion')
     axs[1, 1].set_ylabel('Latency (μs)')
     axs[1, 1].set_ylim(bottom=0)
+    # Use the shorter labels from placement_labels
+    axs[1, 1].set_xticklabels([placement_labels[p] for p in pivot.index])
 
 # Add legend and adjust layout
 handles, labels = axs[0, 0].get_legend_handles_labels()
@@ -244,14 +251,21 @@ for metric_name in ['bandwidth', 'latency']:
         if bin_data.empty:
             continue
             
-        # Create pivot table
+        # Create pivot table with all placement types
         pivot = pd.pivot_table(bin_data, values='value', 
                              columns='cluster', index='placement_type',
                              aggfunc='mean')
         
-        # Get placement types and their values
-        categories = pivot.index.tolist()
-        N = len(categories)
+        # Ensure all placement types are included
+        for placement in placement_order:
+            if placement not in pivot.index:
+                pivot.loc[placement] = np.nan
+                
+        # Reindex to ensure consistent order
+        pivot = pivot.reindex(placement_order)
+        
+        # Number of categories
+        N = len(placement_order)
         
         # Create radar angles
         angles = [n / float(N) * 2 * np.pi for n in range(N)]
@@ -267,7 +281,8 @@ for metric_name in ['bandwidth', 'latency']:
             ax.fill(angles, values, color=color, alpha=0.25)
         
         # Set radar chart labels
-        plt.xticks(angles[:-1], [placement_labels[p] for p in categories])
+        ax.set_xticks(angles[:-1])
+        ax.set_xticklabels([placement_labels[p] for p in placement_order])
         ax.set_title(f'{binary.capitalize()}')
         
         # Add legend
@@ -306,7 +321,7 @@ for metric_name in ['bandwidth', 'latency']:
     # Format main plot
     ax_main.set_title(f'Complete {metric_name.capitalize()} Comparison')
     ax_main.set_ylabel(f'{metric_name.capitalize()} {"(MB/s)" if metric_name=="bandwidth" else "(μs)"}')
-    ax_main.set_xticklabels([f"{p.split('_')[0]}...\n{b}" for p, b in pivot.index])
+    ax_main.set_xticklabels([f"{placement_labels[p]}\n{b}" for p, b in pivot.index])
     
     # Bottom left - efficiency ratio plot (iris vs aion)
     ax_ratio = fig.add_subplot(gs[1, 0])
@@ -318,7 +333,7 @@ for metric_name in ['bandwidth', 'latency']:
         ax_ratio.set_title('Iris/Aion Performance Ratio')
         ax_ratio.set_ylabel('Ratio')
         ax_ratio.axhline(y=1, linestyle='--', color='black', alpha=0.5)
-        ax_ratio.set_xticklabels([f"{p.split('_')[0]}...\n{b}" for p, b in ratio.index], rotation=90)
+        ax_ratio.set_xticklabels([f"{placement_labels[p]}\n{b}" for p, b in ratio.index], rotation=90)
     
     # Bottom right - mean performance by binary source
     ax_binary = fig.add_subplot(gs[1, 1])

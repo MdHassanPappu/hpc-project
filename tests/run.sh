@@ -12,3 +12,8 @@ rm -rf ~/hpc-project/tests/perflogs/$CLUSTER_NAME/*
 rm -f ~/hpc-project/reports/osu-benchmark.json
 
 reframe --config-file ulhpc.py --checkpath 4.1-OSU-BENCHMARK-ONESIDE-TEST.py --name 'OSUPlacementTest' --run --report-file=reports/osu-benchmark-$CLUSTER_NAME.json
+
+
+module load lang/Python/3.11.5-GCCcore-13.2.0
+
+python 4.2-Analyze-Result.py 
