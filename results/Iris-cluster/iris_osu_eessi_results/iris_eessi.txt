@@ -1,0 +1,227 @@
+==== OSU Placement Test Results ====
+Date: Fri May 16 04:42:29 PM CEST 2025
+Nodes allocated: iris-064
+iris-067
+
+---- Placement: same_numa ----
+Hardware topology (intra-node)
+Task 0 on Node iris-064: CPU(s) 0, Socket 0, NUMA node 0
+Task 1 on Node iris-064: CPU(s) 2, Socket 0, NUMA node 0
+
+Running osu_get_latency from /cvmfs/software.eessi.io/versions/2023.06/software/linux/x86_64/intel/haswell/software/OSU-Micro-Benchmarks/7.2-gompi-2023b/libexec/osu-micro-benchmarks/mpi/one-sided/osu_get_latency ...
+# OSU MPI_Get latency Test v7.2
+# Window creation: MPI_Win_allocate
+# Synchronization: MPI_Win_flush
+# Datatype: MPI_CHAR.
+# Size          Latency (us)
+1                       0.12
+2                       0.14
+4                       0.15
+8                       0.14
+16                      0.14
+32                      0.14
+64                      0.15
+128                     0.14
+256                     0.14
+512                     0.15
+1024                    0.16
+2048                    0.18
+4096                    0.22
+8192                    0.30
+
+Running osu_get_bw from /cvmfs/software.eessi.io/versions/2023.06/software/linux/x86_64/intel/haswell/software/OSU-Micro-Benchmarks/7.2-gompi-2023b/libexec/osu-micro-benchmarks/mpi/one-sided/osu_get_bw ...
+# OSU MPI_Get Bandwidth Test v7.2
+# Window creation: MPI_Win_allocate
+# Synchronization: MPI_Win_flush
+# Datatype: MPI_CHAR.
+# Size      Bandwidth (MB/s)
+1                      23.68
+2                      47.49
+4                      96.40
+8                     199.40
+16                    395.26
+32                    762.74
+64                   1541.19
+128                  2906.75
+256                  5757.68
+512                  9191.56
+1024                14793.43
+2048                15336.58
+4096                11906.26
+8192                12706.58
+16384               14194.45
+32768               14897.23
+65536               14967.05
+131072              15035.97
+262144              11768.96
+524288               4705.48
+1048576              4638.32
+
+
+---- Placement: diff_numa_same_socket ----
+Hardware topology (intra-node)
+Task 1 on Node iris-064: CPU(s) 1, Socket 1, NUMA node 1
+Task 0 on Node iris-064: CPU(s) 0, Socket 0, NUMA node 0
+
+Running osu_get_latency from /cvmfs/software.eessi.io/versions/2023.06/software/linux/x86_64/intel/haswell/software/OSU-Micro-Benchmarks/7.2-gompi-2023b/libexec/osu-micro-benchmarks/mpi/one-sided/osu_get_latency ...
+# OSU MPI_Get latency Test v7.2
+# Window creation: MPI_Win_allocate
+# Synchronization: MPI_Win_flush
+# Datatype: MPI_CHAR.
+# Size          Latency (us)
+1                       0.13
+2                       0.14
+4                       0.14
+8                       0.14
+16                      0.14
+32                      0.14
+64                      0.14
+128                     0.14
+256                     0.15
+512                     0.15
+1024                    0.16
+2048                    0.19
+4096                    0.21
+8192                    0.34
+
+Running osu_get_bw from /cvmfs/software.eessi.io/versions/2023.06/software/linux/x86_64/intel/haswell/software/OSU-Micro-Benchmarks/7.2-gompi-2023b/libexec/osu-micro-benchmarks/mpi/one-sided/osu_get_bw ...
+# OSU MPI_Get Bandwidth Test v7.2
+# Window creation: MPI_Win_allocate
+# Synchronization: MPI_Win_flush
+# Datatype: MPI_CHAR.
+# Size      Bandwidth (MB/s)
+1                      25.09
+2                      48.13
+4                      94.79
+8                     198.76
+16                    406.63
+32                    772.15
+64                   1601.50
+128                  3086.94
+256                  5894.75
+512                  9219.81
+1024                15128.58
+2048                16058.36
+4096                12352.08
+8192                12849.65
+16384               14654.60
+32768               15016.23
+65536               15263.87
+131072              15276.52
+262144              10154.33
+524288               4227.76
+1048576              4190.61
+
+
+---- Placement: diff_socket_same_node ----
+Hardware topology (intra-node)
+Task 0 on Node iris-064: CPU(s) 0, Socket 0, NUMA node 0
+Task 1 on Node iris-064: CPU(s) 1, Socket 1, NUMA node 1
+
+Running osu_get_latency from /cvmfs/software.eessi.io/versions/2023.06/software/linux/x86_64/intel/haswell/software/OSU-Micro-Benchmarks/7.2-gompi-2023b/libexec/osu-micro-benchmarks/mpi/one-sided/osu_get_latency ...
+# OSU MPI_Get latency Test v7.2
+# Window creation: MPI_Win_allocate
+# Synchronization: MPI_Win_flush
+# Datatype: MPI_CHAR.
+# Size          Latency (us)
+1                       0.13
+2                       0.14
+4                       0.14
+8                       0.14
+16                      0.14
+32                      0.15
+64                      0.14
+128                     0.15
+256                     0.14
+512                     0.15
+1024                    0.16
+2048                    0.20
+4096                    0.21
+8192                    0.34
+
+Running osu_get_bw from /cvmfs/software.eessi.io/versions/2023.06/software/linux/x86_64/intel/haswell/software/OSU-Micro-Benchmarks/7.2-gompi-2023b/libexec/osu-micro-benchmarks/mpi/one-sided/osu_get_bw ...
+# OSU MPI_Get Bandwidth Test v7.2
+# Window creation: MPI_Win_allocate
+# Synchronization: MPI_Win_flush
+# Datatype: MPI_CHAR.
+# Size      Bandwidth (MB/s)
+1                      24.64
+2                      47.99
+4                      96.90
+8                     182.18
+16                    403.16
+32                    790.16
+64                   1608.77
+128                  3121.33
+256                  5966.41
+512                  9647.54
+1024                15278.00
+2048                16016.12
+4096                12385.76
+8192                13097.64
+16384               14690.14
+32768               15188.24
+65536               15379.90
+131072              15429.52
+262144              10370.63
+524288               4238.29
+1048576              4200.01
+
+
+---- Placement: inter_node ----
+Hardware topology (inter-node)
+Task 0 on Node iris-064: CPU(s) 0, Socket 0, NUMA node 0
+Task 1 on Node iris-067: CPU(s) 0, Socket 0, NUMA node 0
+
+Running osu_get_latency from /cvmfs/software.eessi.io/versions/2023.06/software/linux/x86_64/intel/haswell/software/OSU-Micro-Benchmarks/7.2-gompi-2023b/libexec/osu-micro-benchmarks/mpi/one-sided/osu_get_latency ...
+# OSU MPI_Get latency Test v7.2
+# Window creation: MPI_Win_allocate
+# Synchronization: MPI_Win_flush
+# Datatype: MPI_CHAR.
+# Size          Latency (us)
+1                       1.59
+2                       1.59
+4                       1.58
+8                       1.59
+16                      1.59
+32                      1.61
+64                      1.61
+128                     1.68
+256                     1.74
+512                     1.82
+1024                    1.95
+2048                    2.35
+4096                    2.79
+8192                    3.22
+
+Running osu_get_bw from /cvmfs/software.eessi.io/versions/2023.06/software/linux/x86_64/intel/haswell/software/OSU-Micro-Benchmarks/7.2-gompi-2023b/libexec/osu-micro-benchmarks/mpi/one-sided/osu_get_bw ...
+# OSU MPI_Get Bandwidth Test v7.2
+# Window creation: MPI_Win_allocate
+# Synchronization: MPI_Win_flush
+# Datatype: MPI_CHAR.
+# Size      Bandwidth (MB/s)
+1                       6.89
+2                      13.78
+4                      26.99
+8                      53.67
+16                    110.55
+32                    221.68
+64                    447.23
+128                   748.96
+256                  1406.39
+512                  2649.06
+1024                 4518.86
+2048                 6332.77
+4096                 8904.76
+8192                 9931.72
+16384               10662.44
+32768               11371.79
+65536               11742.16
+131072              11901.51
+262144              12021.39
+524288              12087.36
+1048576             12131.87
+
+
+==== Test Complete ====
+Results are store in : /home/users/mhassan/hpc-project/log/
