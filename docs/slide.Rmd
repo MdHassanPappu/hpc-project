@@ -311,24 +311,39 @@ NUMA_CPUS_MAP[7]="112 113 114 115 116 117 118 119 120 121 122 123 124 125 126 12
 ```
 ---
 
+
+# Verification
+
+```{python, echo=TRUE, eval=FALSE}
+self.postrun_cmds = [
+      'echo "==== Detailed Process Placement Verification (after benchmark) ===="',
+      f'srun -n2 {tmp_str} bash -c \'echo "TASK $SLURM_PROCID on $(hostname): CPU $(taskset -cp $$), NUMA node $(cat /proc/self/status | grep Mems_allowed_list | cut -f2), Socket $(lscpu -p=cpu,socket | grep "^$(taskset -cp $$ | grep -o "[0-9]*$")," | cut -d, -f2)"\'',
+      'echo "==== Verifying process placement ===="',
+      f'srun -n2 {tmp_str} ./hw-detect.sh --verify'
+  ]
+```
+
+---
+
 # Test Case 1: Same NUMA with ReFrame
 
 - Automated process binding to same NUMA domain
 - Consistent test execution
 ```{python, echo=TRUE, eval=FALSE}
-self.num_nodes           = 1               
-self.num_tasks_per_socket= 2          
-self.num_tasks_per_node  = 2   
-self.num_tasks = 2
-self.num_cpus_per_task = 1   
-
-SRUN_OPTIONS = '-N 1 -c 1 -n 2 --ntasks-per-socket 2 \
-    --distribution=block:block:block'
-
-self.job.launcher.options = [    
-    SRUN_OPTIONS,           
-    './bind_same_numa.sh'
-] 
+if self.placement_type == 'same_numa':            
+    self.num_nodes           = 1               
+    self.num_tasks_per_socket= 2          
+    self.num_tasks_per_node  = 2      
+    self.num_tasks           = 2
+    self.num_cpus_per_task   = 1
+    
+    SRUN_OPTIONS = '-N 1 -c 1 -n 2 --ntasks-per-socket 2 \
+        --distribution=block:block:block'
+        
+    self.job.launcher.options = [    
+        SRUN_OPTIONS,           
+        './bind_same_numa.sh'
+    ]
 ```
 
 ---
@@ -346,11 +361,32 @@ echo "Binding all processes to NUMA node $BINDING_NODE"
 numactl --cpunodebind=$BINDING_NODE --membind=$BINDING_NODE "$@"    
 ```
 
----
-
-# Test Case 1: Same NUMA with ReFrame
-
-.center[<img src="imgs/same_numa_reframe_verification.jpeg" alt ="Case 1: Same NUMA with Reframe", height="500px">]
+```{bash, echo=TRUE, eval=FALSE}
+Case same NUMA; Binding all processes to NUMA node 5
+Case same NUMA; Binding all processes to NUMA node 5
+==== Detailed Process Placement Verification (after benchmark) ====
+TASK 0 on aion-0165: CPU pid 1964369's current affinity list: 81, NUMA node 0-7, Socket 1
+TASK 1 on aion-0165: CPU pid 1964370's current affinity list: 82, NUMA node 0-7, Socket 1
+==== Verifying process placement ====
+==== Task 0 placement ====
+==== Task 1 placement ====
+Running on host: aion-0165
+Running on host: aion-0165
+NUMA binding: nodebind: 5 
+membind: 0 1 2 3 4 5 6 7 
+NUMA binding: nodebind: 5 
+membind: 0 1 2 3 4 5 6 7 
+CPUs: 81
+CPUs: 82
+Socket: 1
+Socket: 1
+NUMA node: 5
+NUMA node: 5
+Core: 81
+============================
+Core: 82
+============================
+```
 
 ---
 # Test Case 2: Cross-NUMA with ReFrame
@@ -359,19 +395,18 @@ numactl --cpunodebind=$BINDING_NODE --membind=$BINDING_NODE "$@"
 - Systematic performance measurement
 
 ```{python, echo=TRUE, eval=FALSE}
-self.num_nodes           = 1               
-self.num_tasks_per_socket= 2          
-self.num_tasks_per_node  = 2   
-self.num_tasks = 2
-self.num_cpus_per_task = 1   
-
-SRUN_OPTIONS = '-N 1 -c 1 -n 2 --ntasks-per-socket 2 \
-    --distribution=block:block:block'
-
-self.job.launcher.options = [    
-    SRUN_OPTIONS,           
-    './bind_diff_numa_same_socket.sh'
-] 
+elif self.placement_type == 'diff_numa_same_socket':                      
+    
+    self.job.options = ['-N 1 -n 2 --exclusive']
+    
+    SRUN_OPTIONS = '-N1 -n2 -c1 --distribution=cyclic'
+    
+    self.job.launcher.options = [    
+        SRUN_OPTIONS,           
+        './bind_diff_numa_same_socket.sh'
+    ]        
+    
+    tmp_str = '--cpu-bind=verbose,map_cpu:0,16'
 ```
 
 ---
@@ -393,12 +428,32 @@ else
 fi      
 ```
 
----
-
-# Test Case 2: Cross-NUMA with ReFrame
-
-.center[<img src="imgs/diff_numa_reframe_verification.jpeg" alt ="Case 2: Different NUMA with Reframe", height="500px">]
-
+```{bash, echo=TRUE, eval=FALSE}
+Case different NUMA same socket; Task 0: Binding to NUMA node 0
+Case different NUMA same socket; Task 1: Binding to NUMA node 1
+==== Detailed Process Placement Verification (after benchmark) ====
+TASK 0 on aion-0232: CPU pid 499802's current affinity list: 0, NUMA node 0-7, Socket 0
+TASK 1 on aion-0232: CPU pid 499803's current affinity list: 16, NUMA node 0-7, Socket 0
+==== Verifying process placement ====
+==== Task 0 placement ====
+==== Task 1 placement ====
+Running on host: aion-0232
+Running on host: aion-0232
+NUMA binding: nodebind: 1 
+membind: 0 1 2 3 4 5 6 7 
+NUMA binding: nodebind: 0 
+membind: 0 1 2 3 4 5 6 7 
+CPUs: 16
+CPUs: 0
+Socket: 0
+Socket: 0
+NUMA node: 1
+NUMA node: 0
+Core: 16
+============================
+Core: 0
+============================
+```
 ---
 
 # Test Case 3: Cross-Socket with ReFrame
@@ -407,19 +462,18 @@ fi
 - Reproducible cross-socket communication testing
 
 ```{python, echo=TRUE, eval=FALSE}
-self.num_nodes           = 1               
-self.num_tasks_per_socket= 2          
-self.num_tasks_per_node  = 2   
-self.num_tasks = 2
-self.num_cpus_per_task = 1   
+elif self.placement_type == 'diff_socket_same_node':          
+            
+    self.job.options = ['-N 1 -n 2 --exclusive']
+                    
+    SRUN_OPTIONS = '-N1 -n2 --ntasks-per-socket 1'
+                        
+    self.job.launcher.options = [    
+        SRUN_OPTIONS,
+        './bind_diff_socket.sh'
+    ]
 
-SRUN_OPTIONS = '-N 1 -c 1 -n 2 --ntasks-per-socket 2 \
-    --distribution=block:block:block'
-
-self.job.launcher.options = [    
-    SRUN_OPTIONS,           
-    './bind_same_numa.sh'
-] 
+    tmp_str = '--cpu-bind=verbose,map_cpu:0,64' 
 ```
 
 ---
@@ -440,11 +494,32 @@ else
 fi            
 ```
 
----
-
-# Test Case 3: Cross-Socket with ReFrame
-.center[<img src="imgs/diff_socket_reframe_verification.jpeg" alt ="Case 3: Different Socket with Reframe", height="500px">]
-
+```{bash, echo=TRUE, eval=FALSE}
+Case different socket; Task 1: Binding to NUMA node 4
+Case different socket; Task 0: Binding to NUMA node 0
+==== Detailed Process Placement Verification (after benchmark) ====
+TASK 1 on aion-0234: CPU pid 4090397's current affinity list: 64, NUMA node 0-7, Socket 1
+TASK 0 on aion-0234: CPU pid 4090396's current affinity list: 0, NUMA node 0-7, Socket 0
+==== Verifying process placement ====
+==== Task 0 placement ====
+==== Task 1 placement ====
+Running on host: aion-0234
+Running on host: aion-0234
+NUMA binding: nodebind: 4 
+membind: 0 1 2 3 4 5 6 7 
+NUMA binding: nodebind: 0 
+membind: 0 1 2 3 4 5 6 7 
+CPUs: 64
+CPUs: 0
+Socket: 1
+Socket: 0
+NUMA node: 4
+NUMA node: 0
+Core: 64
+============================
+Core: 0
+============================
+```
 ---
 
 # Test Case 4: Cross-Node with ReFrame
@@ -453,12 +528,15 @@ fi
 - Network topology awareness
 
 ```{python, echo=TRUE, eval=FALSE}
-self.num_nodes = 2
-self.num_tasks_per_node = 1
-            
-self.job.launcher.options = [
-    '--distribution=cyclic',
-]
+elif self.placement_type == 'diff_node':
+    self.num_nodes           = 2
+    self.num_tasks_per_node  = 1     
+    self.num_tasks           = 2
+    self.num_cpus_per_task   = 1
+                
+    self.job.launcher.options = [
+        '--distribution=cyclic',
+    ]
 ```
 
 .center[<img src="imgs/diff_node_reframe_verification.jpeg" alt ="Case 4: Different Node with Reframe", height="500px">]
