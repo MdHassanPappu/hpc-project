@@ -158,9 +158,7 @@ class OSUPlacementTest(OSUMicroBenchmarkBase):
     @run_before('run')
     def set_job_options_for_placement(self):
         """Configure Slurm distribution options for different placement strategies"""
-        self.num_tasks = 2
-        self.num_cpus_per_task = 1
-        
+                
         source_script = os.path.expanduser('~/hpc-project/scripts/2.Hardware-Detection.sh')    
 
         self.prerun_cmds.extend([
@@ -176,99 +174,62 @@ class OSUPlacementTest(OSUMicroBenchmarkBase):
             'chmod 755 ./bind_*.sh 2>/dev/null || echo "No binding scripts to chmod"'
         ])
         
-        coefficient = 8 if self.current_system.name == 'aion' else 4
-        
+        tmp_str = ''
         if self.placement_type == 'same_numa':            
             self.num_nodes           = 1               
             self.num_tasks_per_socket= 2          
             self.num_tasks_per_node  = 2      
+            self.num_tasks           = 2
+            self.num_cpus_per_task   = 1
             
             SRUN_OPTIONS = '-N 1 -c 1 -n 2 --ntasks-per-socket 2 \
                 --distribution=block:block:block'
-            
-            self.prerun_cmds.extend([f"""
-                srun {SRUN_OPTIONS}  bash -c 'CPU=$(taskset -cp $$ | grep -o "[0-9]*$"); 
-                TOPOLOGY=$(lscpu -p=cpu,socket,node | grep "^$CPU,"); 
-                SOCKET=$(echo $TOPOLOGY | cut -d, -f2); 
-                NUMA=$(echo $TOPOLOGY | cut -d, -f3); 
-                echo "Task $SLURM_PROCID: CPU $CPU, Socket $SOCKET, NUMA node $NUMA"'
-            """])
                 
             self.job.launcher.options = [    
-                SRUN_OPTIONS,                
-                '--cpu-bind=verbose',
+                SRUN_OPTIONS,           
                 './bind_same_numa.sh'
             ]
             
-        elif self.placement_type == 'diff_numa_same_socket':  
-            self.num_nodes           = 1               
-            self.num_tasks_per_socket= 1          
-            self.num_tasks_per_node  = 2
+        elif self.placement_type == 'diff_numa_same_socket':                       
             
-            SRUN_OPTIONS = '-N1 -n2 -c1 --ntasks-per-socket 1 \
-                --distribution=cyclic'
+            self.job.options = ['-N 1 -n 2 --exclusive']
             
-            self.prerun_cmds.extend([f"""
-                srun {SRUN_OPTIONS}  bash -c 'CPU=$(taskset -cp $$ | grep -o "[0-9]*$"); 
-                TOPOLOGY=$(lscpu -p=cpu,socket,node | grep "^$CPU,"); 
-                SOCKET=$(echo $TOPOLOGY | cut -d, -f2); 
-                NUMA=$(echo $TOPOLOGY | cut -d, -f3); 
-                echo "Task $SLURM_PROCID: CPU $CPU, Socket $SOCKET, NUMA node $NUMA"'
-            """])
+            SRUN_OPTIONS = '-N1 -n2 -c1 --distribution=cyclic'
             
             self.job.launcher.options = [    
-                SRUN_OPTIONS,                                         
-                '--cpu-bind=verbose',
+                SRUN_OPTIONS,           
                 './bind_diff_numa_same_socket.sh'
             ]        
+            
+            tmp_str = '--cpu-bind=verbose,map_cpu:0,16'
     
         elif self.placement_type == 'diff_socket_same_node':          
-            self.num_nodes           = 2               
-            self.num_tasks_per_socket= 1
-            self.num_tasks           = 5          
-            self.num_tasks_per_node  = 5
             
-            # self.job.options = [
-            #     '--sockets-per-node=2',  # Request 2 sockets
-            # ]
-            
-            SRUN_OPTIONS = '-N1 -n2 -c 1 --ntasks-per-socket 1'
-            
-            self.prerun_cmds.extend([f"""
-                srun {SRUN_OPTIONS}  bash -c 'CPU=$(taskset -cp $$ | grep -o "[0-9]*$"); 
-                TOPOLOGY=$(lscpu -p=cpu,socket,node | grep "^$CPU,"); 
-                SOCKET=$(echo $TOPOLOGY | cut -d, -f2); 
-                NUMA=$(echo $TOPOLOGY | cut -d, -f3); 
-                echo "Task $SLURM_PROCID: CPU $CPU, Socket $SOCKET, NUMA node $NUMA"'
-            """])
-                    
+            self.job.options = ['-N 1 -n 2 --exclusive']
+                            
+            SRUN_OPTIONS = '-N1 -n2 --ntasks-per-socket 1'
+                                
             self.job.launcher.options = [    
                 SRUN_OPTIONS,
-                '--cpu-bind=verbose',
                 './bind_diff_socket.sh'
             ]
 
+            tmp_str = '--cpu-bind=verbose,map_cpu:0,64'
+            
         elif self.placement_type == 'diff_node':
-            self.num_nodes = 2
-            self.num_tasks_per_node = 1
+            self.num_nodes           = 2
+            self.num_tasks_per_node  = 1     
+            self.num_tasks           = 2
+            self.num_cpus_per_task   = 1
                         
             self.job.launcher.options = [
                 '--distribution=cyclic',
-                '--cpu-bind=verbose',
             ]
-     
-        # Add comprehensive verification commands BEFORE running benchmark
-        self.prerun_cmds.extend([
-            'echo "==== SLURM Resource Allocation Details ===="',
-            'env | grep SLURM',
-            'echo "==== Process Binding Verification (will run before benchmark) ===="',
-            'srun -n2 bash -c \'echo "TASK $SLURM_PROCID on $(hostname): CPU mask $(taskset -p $$)"\''
-        ])
-        
+             
         # Add detailed verification AFTER running benchmark
         self.postrun_cmds = [
             'echo "==== Detailed Process Placement Verification (after benchmark) ===="',
-            'srun -n2 bash -c \'echo "TASK $SLURM_PROCID on $(hostname): CPU $(taskset -cp $$), NUMA node $(cat /proc/self/status | grep Mems_allowed_list | cut -f2), Socket $(lscpu -p=cpu,socket | grep "^$(taskset -cp $$ | grep -o "[0-9]*$")," | cut -d, -f2)"\'',
+            f'srun -n2 {tmp_str} bash -c \'echo "TASK $SLURM_PROCID on $(hostname): CPU $(taskset -cp $$), NUMA node $(cat /proc/self/status | grep Mems_allowed_list | cut -f2), Socket $(lscpu -p=cpu,socket | grep "^$(taskset -cp $$ | grep -o "[0-9]*$")," | cut -d, -f2)"\'',
             'echo "==== Verifying process placement ===="',
-            'srun -n2 ./hw-detect.sh --verify'
+            f'srun -n2 {tmp_str} ./hw-detect.sh --verify'
         ]
