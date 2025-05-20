@@ -57,7 +57,7 @@ aion_results = parse_osu_logs(aion_log)
 
 # Combine results
 df = pd.concat([iris_results, aion_results])
-
+df.to_csv('./perflogs/osu_results_combined.csv', index=False)
 # Check if we have data
 if df.empty:
     print("No data found in log files. Please check paths and log content.")
