@@ -790,7 +790,6 @@ class: title-slide
 
 ![Comparison of OSU Performance](imgs\cluster_performance_manual.png)
 
-]
 
 .pull-right[
 ### Key Findings
@@ -802,13 +801,9 @@ class: title-slide
   
 - **Cross-node** communication shows expected higher latency for both clusters, around 12000 +/- MB's
 ]
-
---- -->
-<!-- # Bandwidth Comparison - Manual Testing
-
-![Comparison of Bandwidth for different installation by Manually testing](imgs/Bandwidth_Manually.jpeg)
-
+--->
 ---
+
 # ReFrame Test Results Overview
 
 .pull-left[
