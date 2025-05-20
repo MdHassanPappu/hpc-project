@@ -17,9 +17,9 @@ ITERATIONS=1000
 
 # Aion-cluster 
 declare -A CPU_MASKS=(
-    [same_numa]="0x1,0x10"
-    [diff_numa_same_socket]="0x1,0x10000"
-    [diff_socket_same_node]="0x1,0x10000000000000000"
+    [same_numa]="0,4"
+    [diff_numa_same_socket]="0,16"
+    [diff_socket_same_node]="0,64"
 )
 
 
@@ -57,7 +57,7 @@ for placement in "${PLACEMENTS[@]}"; do
         NODE_ARGS="--nodes=2"
     else
         echo "Hardware topology (intra-node)" | tee -a "$OUTPUT_FILE"
-        BIND_ARGS="--cpu-bind=mask_cpu:${CPU_MASKS[$placement]}"
+        BIND_ARGS="--cpu-bind=map_cpu:${CPU_MASKS[$placement]}"
         NODE_ARGS="--nodes=1"
     fi
 
