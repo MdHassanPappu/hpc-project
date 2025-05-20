@@ -44,7 +44,7 @@ install_local() {
     INSTALL_DIR=~/osu-micro-benchmarks-${OSU_VERSION}
     BUILD_DIR=${INSTALL_DIR}/build
     EBROOTOSUMINMICROMINBENCHMARKS="$BUILD_DIR"
-    export EBROOTOSUMINMICROMINBENCHMARKS$
+    export EBROOTOSUMINMICROMINBENCHMARKS
 
     if [[ -d "$EBROOTOSUMINMICROMINBENCHMARKS/libexec/osu-micro-benchmarks/mpi/one-sided" ]]; then
         echo "✅ OSU Benchmarks already compiled locally at $BUILD_DIR"
