@@ -91,7 +91,7 @@ class: title-slide
 </div>
 
 --
-## Industry Standard: OSU Micro-Benchmarks (OMB)
+## Standard: OSU Micro-Benchmarks (OMB)
 - Widely accepted performance testing suite for MPI implementations
 - Offers comprehensive testing of .maroon[point-to-point] and .maroon[collective] operations
 - Enables standardized comparison across different systems and configurations
@@ -218,17 +218,7 @@ class: title-slide
 
 ---
 
-# Installation Methods: Technical Comparison
 
-| Feature | Local Build | EESSI | EasyBuild |
-|:--------|:----------:|:-----:|:---------:|
-| **Performance** | ★★★★★ | ★★★★☆ | ★★★☆☆ |
-| **Portability** | ★☆☆☆☆ | ★★★★★ | ★★★☆☆ |
-| **Maintenance** | ★☆☆☆☆ | ★★★★☆ | ★★★★★ |
-| **Integration** | ★★★★★ | ★★★☆☆ | ★★★★☆ |
----
-
---- 
 
 class: title-slide
 
@@ -499,20 +489,24 @@ self.postrun_cmds = [
 
 # Test Case 1: Same NUMA 
 
-## Configuration
-```{python, echo=TRUE, eval=FALSE}          
-self.num_nodes = 1               
-self.num_tasks = 2
+## Implementation Strategy
+- Place processes on same NUMA domains within same node
 
-SRUN_OPTIONS = '-N 1 -c 1 -n 2 --ntasks-per-socket 2'
+```{python, echo=TRUE, eval=FALSE}          
+self.num_nodes           = 1               
+self.num_tasks_per_socket= 2          
+self.num_tasks_per_node  = 2      
+self.num_tasks           = 2
+self.num_cpus_per_task   = 1
+
+SRUN_OPTIONS = '-N 1 -c 1 -n 2 --ntasks-per-socket 2 --distribution=block:block:block'
     
 self.job.launcher.options = [    
     SRUN_OPTIONS,           
-    './bind_same_numa.sh'  # Places both processes on same NUMA node
+    './bind_same_numa.sh'
 ]
 ```
 
-# Test Case 1: Same NUMA with ReFrame
 ```{bash, echo=TRUE, eval=FALSE}
 #!/bin/bash
 # Bind both processes to the same NUMA node
@@ -520,7 +514,7 @@ source $(dirname $0)/binding_vars.sh
 # Use the same NUMA for both processes
 BINDING_NODE=$NUMA_SAME
 echo "Binding all processes to NUMA node $BINDING_NODE"
-numactl --cpunodebind=$BINDING_NODE --membind=$BINDING_NODE "$@"    
+numactl --cpunodebind=$BINDING_NODE "$@"    
 ```
 
 ---
@@ -558,7 +552,6 @@ Core: 82
 
 ## Implementation Strategy
 - Place processes on different NUMA domains within same socket
-- Use task ID-based conditional binding
 
 ```{python, echo=TRUE, eval=FALSE}                   
 self.job.options = ['-N 1 -n 2 --exclusive']
@@ -761,7 +754,6 @@ class: title-slide
 - **AION** consistently outperforms **IRIS** in both bandwidth and latency tests
 - **Local** installations generally achieved the highest bandwidth performance
 - **Cross-node** communication shows expected higher latency but with varied bandwidth
-- Several failed tests require investigation (marked in raw data)
 ]
 ---
 
