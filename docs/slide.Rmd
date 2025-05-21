@@ -295,32 +295,6 @@ CPU mapping belonging to:
 
 ---
 
-# CPU Architecture Comparison
-
-- `lscpu -l` 
-  - Provides detailed CPU topology information
-  - Displays NUMA node structure, core counts, and cache hierarchy
---
-
-.left[<img src="imgs/cpu_aion.jpeg" alt ="CPU info on AION", height="500px">]
-
-.right[<img src="imgs/cpu_iris.jpeg" alt ="CPU info on IRIS", height="500px">]
-
----
-
-# Topology Information
-- `lstopo` 
-  - Visualizes system topology
-  - Displays NUMA nodes, CPU cores, and memory hierarchy
-  - Useful for understanding interconnects and memory access patterns
-
---
-.left[<img src="imgs/topo_aion.jpeg" alt ="Topology info on AION", height="500px">]
-
-.right[<img src="imgs/topo_iris.jpeg" alt ="Topology info on IRIS", height="500px">]
-
----
-
 
 class: title-slide
 
