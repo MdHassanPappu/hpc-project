@@ -3,48 +3,48 @@ REFERENCE_VALUES = {
     'aion': {
         'latency': {
             'eessi': {
-                'default': (0.21, -0.2, 0.2, 'us'),  # Updated from 0.21 to 0.18
-                'same_numa': (0.21, -0.2, 0.2, 'us'),
-                'diff_numa_same_socket': (0.21, -0.2, 0.2, 'us'),
-                'diff_socket_same_node': (0.21, -0.2, 0.2, 'us'),
-                'diff_node': (4.0, -0.2, 0.2, 'us')
+                'default': (0.21, -0.05, 0.05, 'us'),  # Updated from 0.21 to 0.18
+                'same_numa': (0.21, -0.05, 0.05, 'us'),
+                'diff_numa_same_socket': (0.21, -0.05, 0.05, 'us'),
+                'diff_socket_same_node': (0.21, -0.05, 0.05, 'us'),
+                'diff_node': (4.1, -0.05, 0.05, 'us')
             },
             'easybuild': {
-                'default': (0.21, -0.2, 0.2, 'us'),  # Updated from 0.21 to 0.18
-                'same_numa': (0.21, -0.2, 0.2, 'us'),
-                'diff_numa_same_socket': (0.21, -0.2, 0.2, 'us'),
-                'diff_socket_same_node': (0.21, -0.2, 0.2, 'us'),
-                'diff_node': (4.0, -0.2, 0.2, 'us')
+                'default': (0.21, -0.05, 0.05, 'us'),  # Updated from 0.21 to 0.18
+                'same_numa': (0.21, -0.05, 0.05, 'us'),
+                'diff_numa_same_socket': (0.21, -0.05, 0.05, 'us'),
+                'diff_socket_same_node': (0.21, -0.05, 0.05, 'us'),
+                'diff_node': (4.1, -0.05, 0.05, 'us')
             },
             'local': {
-                'default': (0.21, -0.2, 0.2, 'us'),  # Updated from 0.21 to 0.18
-                'same_numa': (0.21, -0.2, 0.2, 'us'),
-                'diff_numa_same_socket': (0.21, -0.2, 0.2, 'us'),
-                'diff_socket_same_node': (0.21, -0.2, 0.2, 'us'),
-                'diff_node': (4.0, -0.2, 0.2, 'us')
+                'default': (0.21, -0.05, 0.05, 'us'),  # Updated from 0.21 to 0.18
+                'same_numa': (0.21, -0.05, 0.05, 'us'),
+                'diff_numa_same_socket': (0.21, -0.05, 0.05, 'us'),
+                'diff_socket_same_node': (0.21, -0.05, 0.05, 'us'),
+                'diff_node': (4.1, -0.05, 0.05, 'us')
             },            
         },
         'bandwidth': {
             'eessi': {
-                'default': (7200, -0.2, 0.2, 'MB/s'),  # Updated default value
-                'same_numa': (6800, -0.2, 0.2, 'MB/s'),
-                'diff_numa_same_socket': (9700, -0.2, 0.2, 'MB/s'),
-                'diff_socket_same_node': (8000, -0.2, 0.2, 'MB/s'),
-                'diff_node': (7400, -0.2, 0.2, 'MB/s')
+                'default': (7200, -0.05, 0.05, 'MB/s'),  # Updated default value
+                'same_numa': (9000, -0.05, 0.05, 'MB/s'),
+                'diff_numa_same_socket': (9600, -0.05, 0.05, 'MB/s'),
+                'diff_socket_same_node': (8000, -0.05, 0.05, 'MB/s'),
+                'diff_node': (12000, -0.05, 0.05, 'MB/s')
             },
             'easybuild': {                
-                'default': (2500, -0.2, 0.2, 'MB/s'),  # Updated default value
-                'same_numa': (8200, -0.2, 0.2, 'MB/s'),
-                'diff_numa_same_socket': (9000, -0.2, 0.2, 'MB/s'),
-                'diff_socket_same_node': (7000, -0.2, 0.2, 'MB/s'),
-                'diff_node': (6200, -0.2, 0.2, 'MB/s')
+                'default': (2500, -0.05, 0.05, 'MB/s'),  # Updated default value
+                'same_numa': (8200, -0.05, 0.05, 'MB/s'),
+                'diff_numa_same_socket': (9000, -0.05, 0.05, 'MB/s'),
+                'diff_socket_same_node': (7000, -0.05, 0.05, 'MB/s'),
+                'diff_node': (12000, -0.05, 0.05, 'MB/s')
             },
             'local': {                
-                'default': (2800, -0.2, 0.2, 'MB/s'),  # Updated default value
-                'same_numa': (8000, -0.2, 0.2, 'MB/s'),
-                'diff_numa_same_socket': (9000, -0.2, 0.2, 'MB/s'),
-                'diff_socket_same_node': (7100, -0.2, 0.2, 'MB/s'),
-                'diff_node': (12000, -0.2, 0.2, 'MB/s')
+                'default': (2800, -0.05, 0.05, 'MB/s'),  # Updated default value
+                'same_numa': (8500, -0.05, 0.05, 'MB/s'),
+                'diff_numa_same_socket': (9000, -0.05, 0.05, 'MB/s'),
+                'diff_socket_same_node': (7200, -0.05, 0.05, 'MB/s'),
+                'diff_node': (12000, -0.05, 0.05, 'MB/s')
             },
         }
     },
@@ -52,48 +52,48 @@ REFERENCE_VALUES = {
     'iris': {
         'latency': {
             'eessi': {
-                'default': (0.21, -0.2, 0.2, 'us'),  # Updated from 0.21 to 0.18
-                'same_numa': (0.75, -0.2, 0.2, 'us'),
-                'diff_numa_same_socket': (0.26, -0.2, 0.2, 'us'),
-                'diff_socket_same_node': (0.3, -0.22, 0.2, 'us'),
-                'diff_node': (5.25, -0.2, 0.2, 'us')
+                'default': (0.21, -0.05, 0.05, 'us'),  # Updated from 0.21 to 0.18
+                'same_numa': (0.36, -0.05, 0.05, 'us'),
+                'diff_numa_same_socket': (0.2, -0.05, 0.05, 'us'),
+                'diff_socket_same_node': (0.21, -0.05, 0.05, 'us'),
+                'diff_node': (3.23, -0.05, 0.05, 'us')
             },
             'easybuild': {
-                'default': (0.21, -0.2, 0.2, 'us'),  # Updated from 0.21 to 0.18
-                'same_numa': (0.72, -0.2, 0.2, 'us'),
-                'diff_numa_same_socket': (0.26, -0.2, 0.2, 'us'),
-                'diff_socket_same_node': (0.33, -0.2, 0.2, 'us'),
-                'diff_node': (5.25, -0.2, 0.2, 'us')
+                'default': (0.21, -0.05, 0.05, 'us'),  # Updated from 0.21 to 0.18
+                'same_numa': (0.2, -0.05, 0.05, 'us'),
+                'diff_numa_same_socket': (0.19, -0.05, 0.05, 'us'),
+                'diff_socket_same_node': (0.21, -0.05, 0.05, 'us'),
+                'diff_node': (3.26, -0.05, 0.05, 'us')
             },
             'local': {
-                'default': (0.21, -0.2, 0.2, 'us'),  # Updated from 0.21 to 0.18
-                'same_numa': (0.71, -0.2, 0.2, 'us'),
-                'diff_numa_same_socket': (0.26, -0.2, 0.2, 'us'),
-                'diff_socket_same_node': (0.34, -0.2, 0.2, 'us'),
-                'diff_node': (5.33, -0.2, 0.2, 'us')
+                'default': (0.21, -0.05, 0.05, 'us'),  # Updated from 0.21 to 0.18
+                'same_numa': (0.21, -0.05, 0.05, 'us'),
+                'diff_numa_same_socket': (0.19, -0.05, 0.05, 'us'),
+                'diff_socket_same_node': (0.21, -0.05, 0.05, 'us'),
+                'diff_node': (3.1, -0.05, 0.05, 'us')
             },            
         },
         'bandwidth': {
             'eessi': {
-                'default': (7200, -0.2, 0.2, 'MB/s'),  # Updated default value
-                'same_numa': (900, -0.2, 0.2, 'MB/s'),
-                'diff_numa_same_socket': (2200, -0.2, 0.2, 'MB/s'),
-                'diff_socket_same_node': (4200, -0.2, 0.2, 'MB/s'),
-                'diff_node': (5000, -0.2, 0.2, 'MB/s')
+                'default': (7200, -0.05, 0.05, 'MB/s'),  # Updated default value
+                'same_numa': (4400, -0.05, 0.05, 'MB/s'),
+                'diff_numa_same_socket': (2500, -0.05, 0.05, 'MB/s'),
+                'diff_socket_same_node': (4200, -0.05, 0.05, 'MB/s'),
+                'diff_node': (7300, -0.05, 0.05, 'MB/s')
             },
             'easybuild': {                
-                'default': (2500, -0.2, 0.2, 'MB/s'),  # Updated default value
-                'same_numa': (1800, -0.2, 0.2, 'MB/s'),
-                'diff_numa_same_socket': (2400, -0.2, 0.2, 'MB/s'),
-                'diff_socket_same_node': (4300, -0.2, 0.2, 'MB/s'),
-                'diff_node': (6500, -0.2, 0.2, 'MB/s')
+                'default': (2500, -0.05, 0.05, 'MB/s'),  # Updated default value
+                'same_numa': (4400, -0.05, 0.05, 'MB/s'),
+                'diff_numa_same_socket': (2400, -0.05, 0.05, 'MB/s'),
+                'diff_socket_same_node': (1600, -0.05, 0.05, 'MB/s'),
+                'diff_node': (6200, -0.05, 0.05, 'MB/s')
             },
             'local': {                
-                'default': (2800, -0.2, 0.2, 'MB/s'),  # Updated default value
-                'same_numa': (1850, -0.2, 0.2, 'MB/s'),
-                'diff_numa_same_socket': (2800, -0.2, 0.2, 'MB/s'),
-                'diff_socket_same_node': (4000, -0.2, 0.2, 'MB/s'),
-                'diff_node': (9500, -0.2, 0.2, 'MB/s')
+                'default': (2800, -0.05, 0.05, 'MB/s'),  # Updated default value
+                'same_numa': (4500, -0.05, 0.05, 'MB/s'),
+                'diff_numa_same_socket': (2800, -0.05, 0.05, 'MB/s'),
+                'diff_socket_same_node': (4200, -0.05, 0.05, 'MB/s'),
+                'diff_node': (12000, -0.05, 0.05, 'MB/s')
             },
         }
     }
