@@ -44,6 +44,9 @@ Install OSU Micro-Benchmarks using one of these methods:
 ```bash
 cd scripts
 
+# Allocation 
+./connect.sh # Not mandatory, but an easy way to allocate full nodes exclusively
+
 # Local installation
 ./1.Install-OSU-Micro-Benchmarks --method local
 # Source the generated environment file
@@ -63,8 +66,19 @@ source /tmp/osu_env_*.sh
 Analyze and detect the cluster hardware topology:
 ```bash
 cd scripts
-./2.Hardware-Detection
+./2.Hardware-Detection.sh
 ```
+### Running Tests manully  
+
+```bash
+cd tests/
+./3.latency_bw_test_manually.sh
+```
+⚠️ **Warning 1 :** Before executing this script, please ensure you have exclusive allocation of two full nodes to enable all four placement types.
+
+ ⚠️ **Warning 2 :** For the **IRIS** cluster, to ensure all four placement types in the right place, you need to modify the map_cpu: binding options according to the **IRIS**cluster topology. 
+
+ 📄 Output: Results will be saved in the following directory: `/hpc-project/log/`
 
 ### Running Tests with ReFrame
 
