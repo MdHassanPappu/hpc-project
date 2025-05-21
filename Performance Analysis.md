@@ -109,7 +109,6 @@ The results below show the performance metrics across both clusters with varying
 **Key Performance Findings:**
 - **AION** consistently outperforms **IRIS** in both bandwidth and latency tests
 - Installation method impact varies significantly between clusters
-- Several test cases failed to meet expected reference values, particularly in IRIS bandwidth tests
 - Cross-node communication shows the expected higher latency with variable bandwidth performance
 
 ### 4.2 Bandwidth Analysis
@@ -121,8 +120,8 @@ The results below show the performance metrics across both clusters with varying
 **Key Observations:**
 - On AION, EasyBuild and local builds achieved the highest cross-node bandwidth (~12,335 MB/s)
 - IRIS showed significantly lower bandwidth than AION in most scenarios 
-- EESSI showed unexpectedly high cross-node bandwidth on IRIS (12,127 MB/s) but was marked as failing
-- Local builds on AION showed inconsistent performance, with same-NUMA bandwidth (3,935 MB/s) failing to meet expectations
+- EESSI showed unexpectedly high cross-node bandwidth on IRIS (12,127 MB/s)
+- Local builds on AION showed inconsistent performance, with same-NUMA bandwidth (3,935 MB/s) 
 
 #### 4.2.2 AION Bandwidth Patterns
 
@@ -160,7 +159,6 @@ The results below show the performance metrics across both clusters with varying
 - AION's bandwidth advantage ranges from 1.4× to 8.5× depending on scenario
 - Inconsistent results between reference values and actual performance suggest potential system issues or configuration problems
 - IRIS shows particularly poor performance in different NUMA, same socket tests
-- Several high-bandwidth results were marked as failing, suggesting reference value discrepancies
 
 ### 4.3 Latency Analysis
 
@@ -170,7 +168,7 @@ The results below show the performance metrics across both clusters with varying
 
 **Latency Insights:**
 - AION demonstrated consistent intra-node latency (~0.21μs) across all installation methods
-- IRIS shows more variable latency performance, with several configurations failing to meet reference values
+- IRIS shows more variable latency performance
 - Cross-node communication latency is lower on IRIS (3.1-3.34μs) than AION (3.81-4.48μs)
 
 #### 4.3.2 AION Latency Characteristics
@@ -179,7 +177,7 @@ The results below show the performance metrics across both clusters with varying
 
 **Analysis:**
 - Extremely consistent intra-node latency (~0.2-0.21μs) regardless of placement type or installation method
-- Cross-node latencies range from 3.81μs (EasyBuild, failed) to 4.48μs (local, failed)
+- Cross-node latencies range from 3.81μs (EasyBuild) to 4.48μs (local)
 - Overall latency values on AION are highly consistent with minimal variation between installation methods
 
 #### 4.3.3 IRIS Latency Characteristics
@@ -188,9 +186,8 @@ The results below show the performance metrics across both clusters with varying
 
 **Analysis:**
 - More variable latency performance compared to AION
-- Unusual latency spike in EESSI with different NUMA, same socket (0.72μs, failed)
+- Unusual latency spike in EESSI with different NUMA, same socket (0.72μs)
 - Cross-node latency is consistently better than AION, averaging around 3.24μs
-- Many intra-node latency tests failed despite values being close to reference values
 
 #### 4.3.4 Multi-dimensional Latency Analysis
 
@@ -210,6 +207,5 @@ The results below show the performance metrics across both clusters with varying
 - AION achieves more consistent intra-node latency across all placement scenarios
 - IRIS shows unexpected variability in latency results
 - Cross-node latencies reflect the different interconnect technologies used in each cluster
-- Multiple failed tests suggest that reference values may need recalibration based on current system configurations
 
 

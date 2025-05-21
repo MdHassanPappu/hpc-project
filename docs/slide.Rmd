@@ -800,25 +800,50 @@ Core: 81
 class: title-slide
 
 # Performance Analysis
-<!-- ---
-# Manual Test Results Overview
+
+---
+# Reference Values and Expectations
+
 .pull-left[
+### AION Cluster Reference Values
+**Latency (μs)** with 8192 bytes message size
 
-![Comparison of OSU Performance](imgs/cluster_performance_manual.png)
+| Placement Type | EESSI | EasyBuild | Local |
+|----------------|-------|-----------|-------|
+| Same NUMA | 0.21 | 0.21 | 0.21 |
+| Diff NUMA | 0.21 | 0.21 | 0.21 |
+| Diff Socket | 0.21 | 0.21 | 0.21 |
+| Diff Node | 4.10 | 4.10 | 4.10 |
 
+**Bandwidth (MB/s)** with 1,048,576 bytes (1MB)
+
+| Placement | EESSI | EasyBuild | Local |
+|-----------|-------|-----------|-------|
+| Same NUMA | 9000 | 8200 | 8500 |
+| Diff NUMA | 9600 | 9000 | 9000 |
+| Diff Socket | 8000 | 7000 | 7200 |
+| Diff Node | 12000 | 12000 | 12000 |
+
+]
 
 .pull-right[
-### Key Findings
-- **AION** outperforms **IRIS** in both bandwidth(intra-node) and latency tests
+### Stability vs. Variability
+
+**Stable Metrics**
+- Intra-node latency (hardware-dependent)
+- Relative performance patterns across placements
+- Installation method impact on latency
+
+**Variable Metrics**
+- .maroon[Network library updates] can significantly change performance
+- .maroon[Cross-node bandwidth] due to network congestion
+- .maroon[System load] from other users' workloads
+- Installation method impact on bandwidth
   
-- **AION** Bandwidth achieved 8000 +/- MB's for intra node
-  
-- **IRIS** Bandwidth achieved 4000 +/- MB's for intra node
-  
-- **Cross-node** communication shows expected higher latency for both clusters, around 12000 +/- MB's
 ]
---->
+
 ---
+
 
 # ReFrame Test Results Overview
 
@@ -831,8 +856,8 @@ class: title-slide
 .pull-right[
 ### Key Performance Findings
 - **AION** consistently outperforms **IRIS** in both bandwidth and latency tests
-- **Local** installations generally achieved the highest bandwidth performance
-- **Cross-node** communication shows expected higher latency but with varied bandwidth
+- Installation method impact varies significantly between clusters
+- Cross-node communication shows expected variable bandwidth
 ]
 ---
 
@@ -845,9 +870,10 @@ class: title-slide
 
 .pull-right[
 ### Key Observations
-- **Local installations** achieve highest bandwidth across most placement scenarios
-- On AION, EESSI shows comparable performance to local builds
-- Installation method impact varies significantly by cluster architecture
+- On AION, EasyBuild and local builds achieved highest cross-node bandwidth (~12,335 MB/s)
+- IRIS showed significantly lower bandwidth than AION in most scenarios
+- EESSI showed unexpectedly high cross-node bandwidth on IRIS (12,127 MB/s)
+- Local builds on AION showed inconsistent performance in same-NUMA tests
 ]
 
 ---
@@ -861,9 +887,9 @@ class: title-slide
 
 .pull-right[
 ### AION Bandwidth Patterns
-- Highest performance with **local build + cross-node** communication (~12,335 MB/s)
-- Significant performance difference between installation methods
-- NUMA-aware placement shows clear impact on communication efficiency
+- Different NUMA, same socket placement consistently provided strong bandwidth (~9,100-9,600 MB/s)
+- Same NUMA performance varied widely between installation methods, with EESSI performing best (8,995 MB/s)
+- Cross-node communication excelled with EasyBuild and local builds, both achieving ~12,335 MB/s
 ]
 
 ---
@@ -878,9 +904,10 @@ class: title-slide
 
 .pull-right[
 ### IRIS Bandwidth Patterns
-- Best performance with **local build + cross-node** communication (~8,625 MB/s)
-- Lower overall bandwidth than AION across all scenarios
-- Smaller performance gap between installation methods compared to AION
+- More variable performance across placement scenarios
+- Different NUMA, same socket communication showed poor bandwidth (~1,080-2,540 MB/s)
+- Cross-node performance varied dramatically by installation method: EESSI (12,127 MB/s), local (8,863 MB/s), EasyBuild (6,192 MB/s)
+- Different socket tests showed inconsistent results, with EasyBuild achieving only 1,579 MB/s
 ]
 
 ---
@@ -895,9 +922,9 @@ class: title-slide
 
 .pull-right[
 ### Multi-dimensional Comparison
-- Radar visualization reveals installation method strengths across placement scenarios
 - AION shows larger "footprint" indicating better overall bandwidth performance
-- Installation methods show unique performance profiles across placement types
+- IRIS shows greater variance between installation methods
+- EasyBuild on IRIS shows particularly weak performance in different socket, same node tests
 ]
 
 ---
@@ -911,10 +938,9 @@ class: title-slide
 
 .pull-right[
 ### Comprehensive Analysis
-- Consistent bandwidth hierarchy: Local > EESSI > EasyBuild
-- AION shows 1.4-2.5× bandwidth advantage over IRIS across most scenarios
-- Placement impact is consistent across both clusters
-- Some outlier results warrant further investigation
+- AION's bandwidth advantage ranges from 1.4× to 8.5× depending on scenario
+- Inconsistent results suggest potential system issues or configuration problems
+- IRIS shows particularly poor performance in different NUMA, same socket tests
 ]
 
 ---
@@ -928,9 +954,9 @@ class: title-slide
 
 .pull-right[
 ### Latency Insights
-- All installation methods achieve similar latency within each placement scenario
-- **Cross-node communication** shows expected higher latency (~3.8μs on AION, ~5.3μs on IRIS)
-- AION consistently delivers lower latency across all test cases
+- AION demonstrated consistent intra-node latency (~0.21μs) across all installation methods
+- IRIS shows more variable latency performance
+- Cross-node communication latency is lower on IRIS (3.1-3.34μs) than AION (3.81-4.48μs)
 ]
 
 
@@ -945,9 +971,9 @@ class: title-slide
 
 .pull-right[
 ### AION Latency Characteristics
-- Extremely consistent intra-node latency (~0.2μs) regardless of installation method
-- Cross-node latency (~3.8μs) shows minimal variation between installation methods
-- Installation method has minimal impact on latency performance
+- Extremely consistent intra-node latency (~0.2-0.21μs) regardless of placement or installation method
+- Cross-node latencies range from 3.81μs (EasyBuild) to 4.48μs (local)
+- Overall latency values highly consistent with minimal variation between installation methods
 ]
 
 ---
@@ -961,9 +987,9 @@ class: title-slide
 
 .pull-right[
 ### IRIS Latency Characteristics
-- Higher latency values across all placement scenarios compared to AION
-- Same-NUMA latency (~0.7μs) is notably higher than on AION
-- Cross-node latency (~5.3μs) represents significant communication overhead
+- More variable latency performance compared to AION
+- Unusual latency spike in EESSI with different NUMA, same socket (0.72μs)
+- Cross-node latency consistently better than AION, averaging around 3.24μs
 ]
 
 
@@ -978,9 +1004,9 @@ class: title-slide
 
 .pull-right[
 ### Multi-dimensional Latency Analysis
-- Smaller radar footprint indicates better latency performance (lower values)
-- AION shows clear latency advantage across all dimensions
-- Installation methods show minimal impact on latency performance profile
+- AION shows better intra-node latency across all dimensions
+- IRIS demonstrates better inter-node latency
+- EESSI on IRIS shows a notable outlier in different NUMA, same socket configuration
 ]
 
 ---
@@ -994,9 +1020,10 @@ class: title-slide
 
 .pull-right[
 ### Key Latency Findings
-- Architecture matters more than installation method for latency performance
-- AION achieves ~3.5× better same-NUMA latency compared to IRIS
-- Cross-node communication shows expected higher latency on both clusters
+- Architecture has more impact than installation method for latency performance
+- AION achieves more consistent intra-node latency across all placement scenarios
+- IRIS shows unexpected variability in latency results
+- Cross-node latencies reflect different interconnect technologies in each cluster
 ]
 
 ---
@@ -1004,21 +1031,18 @@ class: title-slide
 # Conclusions
 
 ## Performance Analysis Summary
-- **Installation Impact**: Local builds consistently deliver best performance, especially for bandwidth
-- **Architectural Differences**: AION significantly outperforms IRIS across all test cases
-  - Bandwidth: Up to 2.5× higher on AION
-  - Latency: Up to 3.5× lower on AION
+- **Installation Impact**: Varies significantly between clusters and placement scenarios
+- **Architectural Differences**: AION outperforms IRIS in bandwidth, but IRIS shows better cross-node latency
+  - Bandwidth: Up to 8.5× higher on AION in some scenarios
+  - Intra-node latency: More consistent on AION
   
+--
+
 ## Practical Implications
 - **Application-specific considerations**:
-  - Bandwidth-sensitive applications benefit most from local builds
-  - Latency-sensitive applications see minimal benefit from installation choice
-  - Process placement remains critical regardless of installation method
-  
-## Recommendations
-- Use **locally-built MPI** for bandwidth-critical applications
-- Prioritize **proper process placement** for both bandwidth and latency optimization
-- For portable software stacks, **EESSI** offers good performance/portability balance
+  - Cross-node bandwidth-sensitive applications perform best with EasyBuild/local on AION, EESSI on IRIS
+  - Latency-sensitive applications that communicate across nodes may benefit from IRIS architecture
+  - Process placement remains critical regardless of installation method  
 
 ---
 
