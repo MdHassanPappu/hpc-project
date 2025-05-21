@@ -421,9 +421,15 @@ srun -N 2 -n 2 -c 1 --cpu-bind=cores osu_get_latency
 - Task 0 on Node **cluster - @@ :** CPU(s) 0, Socket 0, NUMA node 0
   
 <!-- .center[<img src="imgs/diff_node_manually_verification.jpeg" alt ="Case 4: Different Node", height="500px">] -->
+---
+
+
+class: title-slide
+
+# Manual placement result Analysis
 
 ---
-# Manual Test Results Overview
+### Manual Test Results Overview : Observations 1 
 .pull-left[
 
 ![Comparison of OSU Performance](imgs\cluster_performance_manual.png)
@@ -442,7 +448,29 @@ srun -N 2 -n 2 -c 1 --cpu-bind=cores osu_get_latency
 ]
 
 ---
+### Manual Test Results Overview : Observations 2 
+.pull-left[
 
+![Comparison of OSU Performance](imgs\cluster_performance_manual_case2.png)
+
+]
+
+.pull-right[
+### Key Findings
+- Most of times **Local** installation leads to low bandwidth for Inter-node communication in both of clusters **AION** **IRIS** .
+- Need to find out the cases ???
+- 
+]
+
+---
+### Bandwidth overview in detail
+
+<div style="text-align: center;">
+  <img src="imgs/bandwidth-aion-iris-local.png" style="width:90%;" />
+  <p><em>Figure: Comparison of bandwidth performance across Aion and Iris with local placement.</em></p>
+</div>
+
+---
 
 class: title-slide
 
