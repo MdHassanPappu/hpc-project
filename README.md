@@ -1,170 +1,81 @@
-# 🔍 **Project Goal**
+# 🔍 **MPI Performance Testing Suite**
 
-You're building a **performance testing suite** using **ReFrame** to **measure MPI communication** latency and bandwidth on the **ULHPC clusters (IRIS and Aion)**.
+A comprehensive **performance testing framework** using **ReFrame** to measure and monitor MPI communication performance on the **ULHPC clusters** (IRIS and Aion).
 
-You'll use:
+## Project Goal
 
-- **OSU Micro-Benchmarks (OMB)** — specifically:
-	- `osu_latency`: to measure **latency** (communication delay)	
-	- `osu_bw`: to measure **bandwidth** (communication speed)
+This project builds a testing suite to measure MPI communication latency and bandwidth, helping to detect unexpected performance drops over time due to system updates, hardware changes, or other factors.
 
-The big idea: You want to catch any **unexpected performance drops** in the cluster over time (due to updates, hardware changes, etc.) using **regression tests**.
+## 🔧 **Technologies**
 
----
+- **ReFrame**: Framework for automated testing and result tracking
+- **OSU Micro-Benchmarks (OMB)**: Industry-standard MPI benchmarking tools
+	- `osu_latency`: Measures communication delay
+	- `osu_bw`: Measures communication throughput
 
-## TODO
-1. Fix the parameter, `--cpu-bind` assign everything on cores. find info from `slurm` document.
-2. Fix the cpu cluster on `Iris`.
-3. Run everything on `Aion`, if there are some bugs, try to fix. step 1 - 4.1
-4.  Run tests for the four cases.
+## 📋 **Requirements**
 
-## schedule
-Every Thursday.
+- **Target Clusters**: 
+	- IRIS (CPU nodes only)
+	- Aion
 
----
+- **Benchmark Parameters**:
+	- `osu_latency`: 8192 bytes message size
+	- `osu_bw`: 1MB (1,048,576 bytes) message size
 
-# 📦 **What You'll Use**
+- **Testing Environments**:
+	- Local build
+	- EasyBuild
+	- EESSI
 
-- **Clusters**: IRIS (CPU nodes only) and Aion
-- **Benchmark tool**: OSU Micro-Benchmarks v7.2
+## 🧪 **Test Scenarios**
 
-- **Message sizes**:
-	- `osu_latency`: 8192 bytes	
-	- `osu_bw`: 1MB (1,048,576 bytes)
+This suite measures MPI performance across four key communication scenarios:
 
-- **Toolchains and environments**:
-	- `env/testing/2023b`
-	- `foss/2023b` toolchain (for local compilation)
-	```bash
-	module purge
-	module load env/development/2023b
-	module load toolchain/foss/2023b
-	```
-- **ReFrame**: to automate tests and track results over time
-```bash
-module use /opt/apps/easybuild/systems/aion/rhel810-20250216/2023b/epyc/modules/all
-module load devel/ReFrame/4.7.3-GCCcore-13.2.0
-```
+1. **Same NUMA node**: Both processes on the same NUMA node
+2. **Different NUMA node**: Processes on the same physical socket but different NUMA nodes
+3. **Different Sockets**: Processes on the same compute node but different sockets
+4. **Different nodes**: Processes running on separate compute nodes
 
----
+## 📦 **Installation**
 
-# 🧪 **Test Design**
-
-You'll test how MPI performs in different hardware configurations:
-
-## 👇 Focus on 3 Communication Scenarios
-
-• both processes are running on the same NUMA node,
-• both processes are running on the same physical socket but different NUMA nodes,
-• both processes are running on the same compute node but different sockets, and
-• the 2 processes are running on different nodes.
-
-Use the `hwloc` tool to find where processes are running (NUMA topology).
-
----
-
-# 🛠️ **Three Ways to Use OSU Benchmarks**
-
-You must test performance using all three versions of the benchmarks:
-
-1. **Locally Compiled**
-	- Compile from source **inside ReFrame**
-	- Use `foss/2023b` toolchain
-```bash
-cd ~/project
-export OSU_VERSION=7.2 # Just to abstract from the version to download 
-wget https://mvapich.cse.ohio-state.edu/download/mvapich/osu-micro-benchmarks-${OSU_VERSION}.tar.gz
-tar -zxvf osu-micro-benchmarks-${OSU_VERSION}.tar.gz 
-cd osu-micro-benchmarks-${OSU_VERSION}
-
-mkdir build # Prepare the specific building directory 
-cd build 
-echo $OSU_VERSION # Check that the variable is defined and with teh appropriate value # Load the appropriate module 
-module load toolchain/foss/2023b # Configure the Foss MPI-based build for installation in the current directory 
-../configure CC=mpicc CFLAGS=-I$(pwd)/../util --prefix=$(pwd) 
-make && make install
-```
-2. **EasyBuild Compiled**
-	- Load a pre-built EasyBuild module	
-	```bash
-	module purge
-	module load tools/EasyBuild/5.0.0
-	eb ~/.local/easybuild/software/EasyBuild/5.0.0/easybuild/easyconfigs/o/OSU-Micro-Benchmarks/OSU-Micro-Benchmarks-7.2-gompi-2023b.eb
-	module load perf/OSU-Micro-Benchmarks/7.5-gompi-2023b
-	```
-	Use `module show perf/OSU-Micro-Benchmarks/7.5-gompi-2020b` to locate the path `~/.local/easybuild/software/OSU-Micro-Benchmarks/7.5-gompi-2020b/easybuild/`. Then copy `log` file and `eb` file to `omb`.
-3. **Precompiled from EESSI**
-	- Use the EESSI software stack
-	```bash
-	module load EESSI
-	modile load OSU-Micro-Benchmarks/7.2-gompi-2023b
-	```
-
-Each test case should work with **each of these three binary sources**.
-
-## Verification
+Install OSU Micro-Benchmarks using one of these methods:
 
 ```bash
-cd libexec/osu-micro-benchmarks/mpi/one-sided/ 
-srun -n 2 ./osu_get_latency 
-srun -n 2 ./osu_get_bw
+cd scripts
+
+# Local installation
+./1.Install-OSU-Micro-Benchmarks --method local
+# Source the generated environment file
+source /tmp/osu_env_*.sh
+
+# EESSI installation
+./1.Install-OSU-Micro-Benchmarks --method eessi
+
+# EasyBuild installation
+./1.Install-OSU-Micro-Benchmarks --method easybuild
 ```
 
----
+## 🚀 **Usage**
 
-# 📊 **Expected Performance (Baseline Values)**
+### Hardware Detection
 
-Use these as **reference values** in your regression tests:
+Analyze and detect the cluster hardware topology:
+```bash
+cd scripts
+./2.Hardware-Detection
+```
 
-| Test | Cluster | Config | Expected Value |
-|-------------|---------|---------------|---------------------|
-| osu_latency | Aion | Intra-node | ~2.3 µs |
-| osu_latency | Aion | Inter-node | ~3.9 µs |
-| osu_bw | Aion | Any config | ~12,000 MB/s |
+### Running Tests with ReFrame
 
-Your ReFrame tests should **fail** if performance drops significantly from these, **unless** such a drop is expected (e.g., system update).
+Execute the complete test suite:
+```bash
+cd tests/
+./run.sh
+```
 
----
+This will automatically run all benchmark tests and generate performance reports.
 
-# 📂 **What You Need to Deliver**
+## 📊 **Results**
 
-## 1. ✅ ReFrame Test Scripts
-
-- For each binary source (local, EasyBuild, EESSI)
-- For each scenario (intra-socket, inter-socket, inter-node)
-- For each cluster (IRIS and Aion)
-- Fully documented
-
-## 2. 📈 Performance Report
-
-- Graphs showing results for each scenario + binary source
-- Analysis explaining:
-- Why you chose specific test cases
-- Why your reference values are valid
-- What changes might affect those values
-
-## 3. 📁 Git Repository
-
-- All scripts, configs, and documentation
-- Instructions to clone and run the tests
-
-## 4. 🎤 Final Evaluation
-
-- 10-minute presentation: goals, methods, findings
-- 15–20 minute live demo:
-- Start from scratch (clone repo)
-- Load modules
-- Run tests in ReFrame
-- Show that results match your report
-
----
-
-# 🧠 Strategy Tips
-
-- Start testing **intra-node** cases first (easier to debug).
-
-- Use `hwloc` to **pin processes** to specific sockets/cores.
-
-- Use ReFrame's **performance reference system** to define pass/fail thresholds.
-
-- Keep your test scripts **modular** so you can reuse logic across scenarios and clusters.
+Test results are stored in the ReFrame output directory and can be used to track performance trends over time.
