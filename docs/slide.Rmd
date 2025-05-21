@@ -366,6 +366,26 @@ class: title-slide
   - Complements SLURM's placement capabilities
 
 ---
+
+### Verification of CPU, Socket, and NUMA binding after placement
+
+ 
+```{bash, echo=TRUE, eval=FALSE}
+    srun $NODE_ARGS -n 2 $BIND_ARGS bash -c '
+        CPU=$(taskset -cp $BASHPID | awk -F: "{print \$2}" | tr -d " ")
+        TOPOLOGY=$(lscpu -p=cpu,socket,node | grep "^$CPU,")
+        SOCKET=$(echo $TOPOLOGY | cut -d, -f2)
+        NUMA=$(echo $TOPOLOGY | cut -d, -f3)
+        NODE=$(hostname)
+        echo "Task $SLURM_PROCID on Node $NODE: CPU $CPU, Socket $SOCKET, NUMA node $NUMA"
+    ' | tee -a "$OUTPUT_FILE"```
+```
+
+- `taskset -cp $BASHPID`: Shows the CPU affinity of the current shell.
+
+- `lscpu -p=cpu,socket,node | grep "^$CPU,`: Gets the socket and NUMA node info for the CPU affinity obtained in the previous command.
+
+---
 # Test Case 1: Same NUMA Node
 
 - Communication within single NUMA domain
@@ -461,6 +481,7 @@ class: title-slide
 - Need to find out the cases ???
 - 
 ]
+
 
 ---
 ### Bandwidth overview in detail
