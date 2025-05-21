@@ -804,7 +804,7 @@ class: title-slide
 # Manual Test Results Overview
 .pull-left[
 
-![Comparison of OSU Performance](imgs\cluster_performance_manual.png)
+![Comparison of OSU Performance](imgs/cluster_performance_manual.png)
 
 
 .pull-right[
