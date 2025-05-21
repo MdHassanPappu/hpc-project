@@ -442,7 +442,7 @@ class: title-slide
 ### Manual Test Results Overview : Observations 1 
 .pull-left[
 
-![Comparison of OSU Performance](imgs\cluster_performance_manual.png)
+![Comparison of OSU Performance](imgs/cluster_performance_manual.png)
 
 ]
 
@@ -461,7 +461,7 @@ class: title-slide
 ### Manual Test Results Overview : Observations 2 
 .pull-left[
 
-![Comparison of OSU Performance](imgs\cluster_performance_manual_case2.png)
+![Comparison of OSU Performance](imgs/cluster_performance_manual_case2.png)
 
 ]
 
