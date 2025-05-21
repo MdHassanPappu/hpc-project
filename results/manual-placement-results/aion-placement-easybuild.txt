@@ -1,0 +1,227 @@
+==== OSU Placement Test Results ====
+Date: Tue May 20 02:45:55 PM CEST 2025
+Nodes allocated: aion-0083
+aion-0171
+
+---- Placement: same_numa ----
+Hardware topology (intra-node)
+Task 1 on Node aion-0083: CPU(s) 4, Socket 0, NUMA node 0
+Task 0 on Node aion-0083: CPU(s) 0, Socket 0, NUMA node 0
+
+Running osu_get_latency from /home/users/mhassan/.local/easybuild/software/OSU-Micro-Benchmarks/7.2-gompi-2023b/libexec/osu-micro-benchmarks/mpi/one-sided/osu_get_latency ...
+# OSU MPI_Get latency Test v7.2
+# Window creation: MPI_Win_allocate
+# Synchronization: MPI_Win_flush
+# Datatype: MPI_CHAR.
+# Size          Latency (us)
+1                       0.13
+2                       0.13
+4                       0.13
+8                       0.13
+16                      0.13
+32                      0.13
+64                      0.13
+128                     0.13
+256                     0.13
+512                     0.13
+1024                    0.14
+2048                    0.15
+4096                    0.16
+8192                    0.20
+
+Running osu_get_bw from /home/users/mhassan/.local/easybuild/software/OSU-Micro-Benchmarks/7.2-gompi-2023b/libexec/osu-micro-benchmarks/mpi/one-sided/osu_get_bw ...
+# OSU MPI_Get Bandwidth Test v7.2
+# Window creation: MPI_Win_allocate
+# Synchronization: MPI_Win_flush
+# Datatype: MPI_CHAR.
+# Size      Bandwidth (MB/s)
+1                      29.78
+2                      57.37
+4                     120.32
+8                     239.16
+16                    493.07
+32                   1014.91
+64                   2071.32
+128                  3870.03
+256                  7800.92
+512                 13700.90
+1024                21445.71
+2048                29270.24
+4096                29178.85
+8192                30761.68
+16384               33195.66
+32768               35282.91
+65536               36441.71
+131072              18009.72
+262144               8548.03
+524288               8512.06
+1048576              8455.08
+
+
+---- Placement: diff_numa_same_socket ----
+Hardware topology (intra-node)
+Task 1 on Node aion-0083: CPU(s) 16, Socket 0, NUMA node 1
+Task 0 on Node aion-0083: CPU(s) 0, Socket 0, NUMA node 0
+
+Running osu_get_latency from /home/users/mhassan/.local/easybuild/software/OSU-Micro-Benchmarks/7.2-gompi-2023b/libexec/osu-micro-benchmarks/mpi/one-sided/osu_get_latency ...
+# OSU MPI_Get latency Test v7.2
+# Window creation: MPI_Win_allocate
+# Synchronization: MPI_Win_flush
+# Datatype: MPI_CHAR.
+# Size          Latency (us)
+1                       0.13
+2                       0.13
+4                       0.13
+8                       0.17
+16                      0.13
+32                      0.13
+64                      0.13
+128                     0.16
+256                     0.13
+512                     0.14
+1024                    0.14
+2048                    0.17
+4096                    0.17
+8192                    0.21
+
+Running osu_get_bw from /home/users/mhassan/.local/easybuild/software/OSU-Micro-Benchmarks/7.2-gompi-2023b/libexec/osu-micro-benchmarks/mpi/one-sided/osu_get_bw ...
+# OSU MPI_Get Bandwidth Test v7.2
+# Window creation: MPI_Win_allocate
+# Synchronization: MPI_Win_flush
+# Datatype: MPI_CHAR.
+# Size      Bandwidth (MB/s)
+1                      27.84
+2                      56.03
+4                     115.53
+8                     248.49
+16                    482.94
+32                   1006.48
+64                   1920.84
+128                  3948.95
+256                  8131.93
+512                 13870.53
+1024                21963.84
+2048                29807.21
+4096                31294.22
+8192                31166.10
+16384               33879.51
+32768               36211.29
+65536               37156.50
+131072              19387.98
+262144               9114.91
+524288               9064.82
+1048576              9070.12
+
+
+---- Placement: diff_socket_same_node ----
+Hardware topology (intra-node)
+Task 1 on Node aion-0083: CPU(s) 64, Socket 1, NUMA node 4
+Task 0 on Node aion-0083: CPU(s) 0, Socket 0, NUMA node 0
+
+Running osu_get_latency from /home/users/mhassan/.local/easybuild/software/OSU-Micro-Benchmarks/7.2-gompi-2023b/libexec/osu-micro-benchmarks/mpi/one-sided/osu_get_latency ...
+# OSU MPI_Get latency Test v7.2
+# Window creation: MPI_Win_allocate
+# Synchronization: MPI_Win_flush
+# Datatype: MPI_CHAR.
+# Size          Latency (us)
+1                       0.13
+2                       0.14
+4                       0.13
+8                       0.13
+16                      0.13
+32                      0.14
+64                      0.13
+128                     0.13
+256                     0.13
+512                     0.14
+1024                    0.14
+2048                    0.15
+4096                    0.17
+8192                    0.21
+
+Running osu_get_bw from /home/users/mhassan/.local/easybuild/software/OSU-Micro-Benchmarks/7.2-gompi-2023b/libexec/osu-micro-benchmarks/mpi/one-sided/osu_get_bw ...
+# OSU MPI_Get Bandwidth Test v7.2
+# Window creation: MPI_Win_allocate
+# Synchronization: MPI_Win_flush
+# Datatype: MPI_CHAR.
+# Size      Bandwidth (MB/s)
+1                      27.49
+2                      55.85
+4                     112.65
+8                     227.54
+16                    456.42
+32                    974.57
+64                   1965.36
+128                  3796.20
+256                  7753.92
+512                 13485.67
+1024                21251.95
+2048                28660.61
+4096                29731.73
+8192                30255.17
+16384               33335.41
+32768               34575.86
+65536               35168.93
+131072              14406.35
+262144               7187.46
+524288               7108.80
+1048576              7197.26
+
+
+---- Placement: inter_node ----
+Hardware topology (inter-node)
+Task 1 on Node aion-0171: CPU(s) 0, Socket 0, NUMA node 0
+Task 0 on Node aion-0083: CPU(s) 0, Socket 0, NUMA node 0
+
+Running osu_get_latency from /home/users/mhassan/.local/easybuild/software/OSU-Micro-Benchmarks/7.2-gompi-2023b/libexec/osu-micro-benchmarks/mpi/one-sided/osu_get_latency ...
+# OSU MPI_Get latency Test v7.2
+# Window creation: MPI_Win_allocate
+# Synchronization: MPI_Win_flush
+# Datatype: MPI_CHAR.
+# Size          Latency (us)
+1                       2.85
+2                       2.84
+4                       2.82
+8                       2.83
+16                      2.84
+32                      2.83
+64                      2.93
+128                     3.01
+256                     3.06
+512                     3.12
+1024                    3.18
+2048                    3.34
+4096                    3.94
+8192                    4.50
+
+Running osu_get_bw from /home/users/mhassan/.local/easybuild/software/OSU-Micro-Benchmarks/7.2-gompi-2023b/libexec/osu-micro-benchmarks/mpi/one-sided/osu_get_bw ...
+# OSU MPI_Get Bandwidth Test v7.2
+# Window creation: MPI_Win_allocate
+# Synchronization: MPI_Win_flush
+# Datatype: MPI_CHAR.
+# Size      Bandwidth (MB/s)
+1                       3.77
+2                       7.56
+4                      15.09
+8                      30.28
+16                     60.52
+32                    122.01
+64                    243.00
+128                   428.73
+256                   830.76
+512                  1395.93
+1024                 3145.76
+2048                 6032.98
+4096                 9411.70
+8192                10731.33
+16384               11255.66
+32768               11660.45
+65536               11459.16
+131072              11409.43
+262144              11853.90
+524288              11818.67
+1048576             11969.80
+
+
+==== Test Complete ====
+Results are store in : /home/users/mhassan/hpc-project/log/

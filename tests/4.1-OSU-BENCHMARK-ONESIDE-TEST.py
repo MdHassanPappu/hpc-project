@@ -214,7 +214,7 @@ class OSUPlacementTest(OSUMicroBenchmarkBase):
                 './bind_diff_socket.sh'
             ]
 
-            tmp_str = '--cpu-bind=verbose,map_cpu:0,64'
+            tmp_str = f'--cpu-bind=verbose,map_cpu:0,{64 if self.current_system.name == "aion" else 1}'
             
         elif self.placement_type == 'diff_node':
             self.num_nodes           = 2
