@@ -44,19 +44,16 @@ Install OSU Micro-Benchmarks using one of these methods:
 ```bash
 cd scripts
 
-# Allocation 
-./connect.sh # Not mandatory, but an easy way to allocate full nodes exclusively
-
 # Local installation
-./1.Install-OSU-Micro-Benchmarks --method local
+./1.Install-OSU-Micro-Benchmarks.sh --method local
 # Source the generated environment file
 source /tmp/osu_env_*.sh
 
 # EESSI installation
-./1.Install-OSU-Micro-Benchmarks --method eessi
+./1.Install-OSU-Micro-Benchmarks.sh --method eessi
 
 # EasyBuild installation
-./1.Install-OSU-Micro-Benchmarks --method easybuild
+./1.Install-OSU-Micro-Benchmarks.sh --method easybuild
 ```
 
 ## 🚀 **Usage**
@@ -71,10 +68,26 @@ cd scripts
 ### Running Tests manully  
 
 ```bash
-cd tests/
+cd scripts
 ./3.latency_bw_test_manually.sh
 ```
 ⚠️ **Warning 1 :** Before executing this script, please ensure you have exclusive allocation of two full nodes to enable all four placement types.
+
+✅ Full procedure can be 
+
+```bash
+salloc -p interactive --qos debug -N 2 -n 2 --exclusive 
+
+cd ..*/scripts
+
+# Local installation
+./1.Install-OSU-Micro-Benchmarks.sh --method local
+
+# Source the generated environment file
+source /tmp/osu_env_*.sh
+
+./3.latency_bw_test_manually.sh
+```
 
  ⚠️ **Warning 2 :** For the **IRIS** cluster, to ensure all four placement types in the right place, you need to modify the map_cpu: binding options according to the **IRIS**cluster topology. 
 
